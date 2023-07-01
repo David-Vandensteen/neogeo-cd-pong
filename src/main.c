@@ -30,14 +30,13 @@ static void update() {
   if (joypad_is_up(0)) move_gpp(&racquet[0], 0, -RACQUET_SPEED);
   if (joypad_is_down(0)) move_gpp(&racquet[0], 0, RACQUET_SPEED);
 
-  // if (get_frame_counter() % 100  == 0) {
-  //   if (randomBool == true) {
-  //     y = RACQUET_SPEED;
-  //   } else {
-  //     y = -RACQUET_SPEED;
-  //   }
-  //   move_gpp(&racquet[1], 0, y);
-  // }
+  if (get_frame_counter() % 5 == 0) {
+    if (randomBool == 0) {
+      move_gpp(&racquet[1], 0, RACQUET_SPEED);
+    } else {
+      move_gpp(&racquet[1], 0, -RACQUET_SPEED);
+    }
+  }
 }
 
 int main(void) {
