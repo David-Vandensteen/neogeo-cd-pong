@@ -1,32 +1,50 @@
 #include <neocore.h>
 #include "externs.h"
 
+// TODO : mak serve:raine neocore
+
 #define SCREEN_Y_MIN 0
 #define SCREEN_Y_MAX 256
 
-#define RACQUET_SPEED 3
+#define RACQUET_SPEED 4
+#define BALL_SPEED 2
 #define IA_STATE_TIMEOUT 10
 
 static enum state { IDLE, UP, DOWN };
 
 static GFX_Picture_Physic racquet[2];
+static GFX_Picture_Physic ball;
 
 static enum state ia_state = IDLE;
 static int ia_state_timeout = IA_STATE_TIMEOUT;
 
+static short ball_x_move = -1;
+
 static void init_racquet(GFX_Picture_Physic *racquet) {
-  init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 0, 0, 0, 0, AUTOBOX);
+  init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
+
+  // --------------------------------------------------------neocore patch
+  racquet->gfx_picture.pixel_height = racquet->gfx_picture.pixel_height - 28;
+  // --------------------------------------------------width patch ?
 }
 
 static void init() {
   init_gpu();
   init_racquet(&racquet[0]);
   init_racquet(&racquet[1]);
+  init_gpp(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX); // TODO : neocore : AUTOBOX not working
 }
 
 static void display() {
   display_gpp(&racquet[0], 16, 16);
   display_gpp(&racquet[1], 320 - 32, 16);
+  display_gpp(&ball, 250, 100);
+}
+
+static void ball_update() {
+  if (collide_box(&racquet[0].box, &ball.box)) ball_x_move = BALL_SPEED;
+  if (collide_box(&racquet[1].box, &ball.box)) ball_x_move = -BALL_SPEED;
+  move_gpp(&ball, ball_x_move, 0);
 }
 
 static void player_update() {
@@ -52,6 +70,7 @@ static void ia_update() {
 }
 
 static void update() {
+  ball_update();
   player_update();
   ia_update();
 }
