@@ -23,12 +23,18 @@ static short ball_x_move = -1;
 static short ball_y_move = 0;
 static int ball_y_move_frequency = 10;
 
+// pathc neocore
+BOOL each_frame(DWORD frame) {
+  if (get_frame_counter() % frame == 0) return true;
+  return false;
+}
+
 static void init_racquet(GFX_Picture_Physic *racquet) {
   init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
 
   // --------------------------------------------------------neocore patch
   racquet->gfx_picture.pixel_height = racquet->gfx_picture.pixel_height - 28;
-  // --------------------------------------------------width patch ?
+  // --------------width patch ?
 }
 
 static void init() {
@@ -54,7 +60,7 @@ static void ball_update() {
     if (ball_direction == 2) ball_y_move = 1;
   }
   if (collide_box(&racquet[1].box, &ball.box)) ball_x_move = -BALL_SPEED;
-  if (get_frame_counter() % ball_y_move_frequency == 0) {
+  if (each_frame(ball_y_move_frequency)) {
     move_gpp(&ball, ball_x_move, ball_y_move);
   } else {
     move_gpp(&ball, ball_x_move, 0);
