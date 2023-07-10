@@ -8,17 +8,20 @@
 
 #define RACQUET_SPEED 4
 #define BALL_SPEED 2
-#define IA_STATE_TIMEOUT 10
+#define IA_DIRECTION_TIMEOUT 10
 
-static enum state { IDLE, UP, DOWN };
+enum direction { IDLE, UP, DOWN };
 
 static GFX_Picture_Physic racquet[2];
 static GFX_Picture_Physic ball;
 
-static enum state ia_state = IDLE;
-static int ia_state_timeout = IA_STATE_TIMEOUT;
+static enum direction ia_direction = IDLE;
+static int ia_direction_timeout = IA_DIRECTION_TIMEOUT;
 
+static int ball_direction = 0;
 static short ball_x_move = -1;
+static short ball_y_move = 0;
+static int ball_y_move_frequency = 10;
 
 static void init_racquet(GFX_Picture_Physic *racquet) {
   init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
@@ -42,9 +45,20 @@ static void display() {
 }
 
 static void ball_update() {
-  if (collide_box(&racquet[0].box, &ball.box)) ball_x_move = BALL_SPEED;
+  if (collide_box(&racquet[0].box, &ball.box)) {
+    ball_direction = get_random(3);
+    ball_y_move_frequency = get_random(10);
+    ball_x_move = BALL_SPEED;
+    if (ball_direction == 0) ball_y_move = -1;
+    if (ball_direction == 1) ball_y_move = 0;
+    if (ball_direction == 2) ball_y_move = 1;
+  }
   if (collide_box(&racquet[1].box, &ball.box)) ball_x_move = -BALL_SPEED;
-  move_gpp(&ball, ball_x_move, 0);
+  if (get_frame_counter() % ball_y_move_frequency == 0) {
+    move_gpp(&ball, ball_x_move, ball_y_move);
+  } else {
+    move_gpp(&ball, ball_x_move, 0);
+  }
 }
 
 static void player_update() {
@@ -57,16 +71,16 @@ static void player_update() {
 }
 
 static void ia_update() {
-  if (ia_state_timeout <= 0) {
-    ia_state = get_random(3);
-    ia_state_timeout = IA_STATE_TIMEOUT;
+  if (ia_direction_timeout <= 0) {
+    ia_direction = get_random(3);
+    ia_direction_timeout = IA_DIRECTION_TIMEOUT;
   }
-  if (ia_state == UP && get_y_gpp(racquet[1]) > SCREEN_Y_MIN) move_gpp(&racquet[1], 0, -RACQUET_SPEED);
+  if (ia_direction == UP && get_y_gpp(racquet[1]) > SCREEN_Y_MIN) move_gpp(&racquet[1], 0, -RACQUET_SPEED);
 
-  if (ia_state == DOWN && get_y_gpp(racquet[1]) < SCREEN_Y_MAX - racquet[1].gfx_picture.pixel_height) {
+  if (ia_direction == DOWN && get_y_gpp(racquet[1]) < SCREEN_Y_MAX - racquet[1].gfx_picture.pixel_height) {
     move_gpp(&racquet[1], 0, RACQUET_SPEED);
   }
-  ia_state_timeout -= 1;
+  ia_direction_timeout -= 1;
 }
 
 static void update() {
