@@ -2,7 +2,12 @@
 #include "externs.h"
 
 // TODO : mak serve:raine neocore
+// TODO : bug mame-profile in standalone mode
+// TODO : mak raine
+// todo : mak mame
 
+#define SCREEN_X_MIN 0
+#define SCREEN_X_MAX 320
 #define SCREEN_Y_MIN 0
 #define SCREEN_Y_MAX 256
 
@@ -18,16 +23,38 @@ static GFX_Picture_Physic ball;
 static enum direction ia_direction = IDLE;
 static int ia_direction_timeout = IA_DIRECTION_TIMEOUT;
 
-static int ball_direction = 0;
-static short ball_x_move = -1;
-static short ball_y_move = 0;
-static int ball_y_move_frequency = 10;
-
-// pathc neocore
+// patch neocore
 BOOL each_frame(DWORD frame) {
-  if (get_frame_counter() % frame == 0) return true;
-  return false;
+  return (get_frame_counter() % frame == 0) ? true : false;
+  // if (get_frame_counter() % frame == 0) return true;
+  // return false;
 }
+
+Vec2short get_vec2_pos_gpp (GFX_Picture_Physic gfx_picture_physic) {
+  Vec2short pos = {get_x_gpp(gfx_picture_physic), get_y_gpp(gfx_picture_physic)};
+  return pos;
+}
+
+void set_vec2_pos_gpp(GFX_Picture_Physic *gfx_picture_physic, Vec2short pos) {
+  set_pos_gpp(gfx_picture_physic, pos.x, pos.y);
+}
+
+Vec2short get_next_pos_slope(Vec2short current_pos, Vec2short destination_limit_pos, short slope) {
+  Vec2short next_pos = {current_pos.x, current_pos.y};
+  short normalized_slope = slope;
+  if (current_pos.x >= destination_limit_pos.x || current_pos.y >= destination_limit_pos.y) return current_pos;
+  if (slope == 0) normalized_slope = 1;
+  if (current_pos.x % normalized_slope == 0) {
+    if (normalized_slope > 0) {
+      next_pos.y += 1;
+    } else {
+      next_pos.y -= 1;
+    }
+  }
+  next_pos.x += 1;
+  return next_pos;
+}
+//
 
 static void init_racquet(GFX_Picture_Physic *racquet) {
   init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
@@ -47,24 +74,22 @@ static void init() {
 static void display() {
   display_gpp(&racquet[0], 16, 16);
   display_gpp(&racquet[1], 320 - 32, 16);
-  display_gpp(&ball, 250, 100);
+  display_gpp(&ball, 10, 10);
 }
 
 static void ball_update() {
-  if (collide_box(&racquet[0].box, &ball.box)) {
-    ball_direction = get_random(3);
-    ball_y_move_frequency = get_random(10);
-    ball_x_move = BALL_SPEED;
-    if (ball_direction == 0) ball_y_move = -1;
-    if (ball_direction == 1) ball_y_move = 0;
-    if (ball_direction == 2) ball_y_move = 1;
-  }
-  if (collide_box(&racquet[1].box, &ball.box)) ball_x_move = -BALL_SPEED;
-  if (each_frame(ball_y_move_frequency)) {
-    move_gpp(&ball, ball_x_move, ball_y_move);
-  } else {
-    move_gpp(&ball, ball_x_move, 0);
-  }
+  Vec2short ball_next_position;
+  Vec2short ball_destination_limit = {SCREEN_X_MAX, SCREEN_Y_MAX};
+
+  init_log();
+
+  log_short("x", ball_next_position.x);
+  log_short("y", ball_next_position.y);
+
+  set_vec2_pos_gpp(
+    &ball,
+    get_next_pos_slope(get_vec2_pos_gpp(ball), ball_destination_limit, -10)
+  );
 }
 
 static void player_update() {
