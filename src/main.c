@@ -57,6 +57,8 @@ Vec2short get_next_pos_slope(Vec2short current_pos, short slope, enum direction 
 }
 //
 
+int main();
+
 static void init_racquet(GFX_Picture_Physic *racquet) {
   init_gpp(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
 
@@ -68,6 +70,7 @@ static void init_racquet(GFX_Picture_Physic *racquet) {
 static void init_ball_state(BallState *ball_state) {
   ball_state->slope = -5;
   ball_state->direction = RIGHT;
+  ball_state->position = get_vec2_pos_gpp(ball);
 }
 
 static void init() {
@@ -75,7 +78,6 @@ static void init() {
   init_racquet(&racquet[0]);
   init_racquet(&racquet[1]);
   init_gpp(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX); // TODO : neocore : AUTOBOX not working
-  init_ball_state(&ball_state);
 
   init_box(&upper_wall, 320, 16, 0, 0);
   update_box(&upper_wall, 0, -16);
@@ -88,6 +90,21 @@ static void display() {
   display_gpp(&racquet[0], 16, 16);
   display_gpp(&racquet[1], 320 - 32, 16);
   display_gpp(&ball, 10, 100);
+  init_ball_state(&ball_state);
+}
+
+static void update_logic() {
+  // init_log();
+  // log_short("X", ball_state.position.x);
+  // log_short("Y", ball_state.position.y);
+
+  if (ball_state.position.x >= SCREEN_X_MAX || ball_state.position.y <= SCREEN_X_MIN) {
+    init_log();
+    if (ball_state.position.x >= SCREEN_X_MAX) log_info("PLAYER WINS");
+    if (ball_state.position.x <= SCREEN_X_MIN) log_info("COMPUTER WINS");
+    wait_vbl_max(500);
+    main();
+  }
 }
 
 static void update_ball() {
@@ -98,13 +115,9 @@ static void update_ball() {
 
   ball_state.position = get_vec2_pos_gpp(ball);
 
-  init_log();
-  log_short("X", ball_state.position.x);
-  log_short("Y", ball_state.position.y);
-
   if (
-      collide_upper_wall && ball_state.slope < 0
-      || collide_lower_wall && ball_state.slope > 0
+      (collide_upper_wall && ball_state.slope < 0)
+      || (collide_lower_wall && ball_state.slope > 0)
     ) ball_state.slope = ball_state.slope * -1;
 
   if (collide_player || ball_state.position.x <= SCREEN_X_MIN) {
@@ -140,6 +153,7 @@ static void update_ia() {
     ia_direction = get_random(3);
     ia_direction_timeout = IA_DIRECTION_TIMEOUT;
   }
+
   if (ia_direction == UP && get_y_gpp(racquet[1]) > SCREEN_Y_MIN) move_gpp(&racquet[1], 0, -RACQUET_SPEED);
 
   if (ia_direction == DOWN && get_y_gpp(racquet[1]) < SCREEN_Y_MAX - racquet[1].gfx_picture.pixel_height) {
@@ -149,12 +163,13 @@ static void update_ia() {
 }
 
 static void update() {
+  update_logic();
   update_ball();
   update_player();
   update_ia();
 }
 
-int main(void) {
+int main() {
   init();
   display();
   while(1) {
