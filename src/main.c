@@ -1,5 +1,6 @@
 #include <neocore.h>
 #include "externs.h"
+#include "main.h"
 
 /* -----------------------------------------------
 
@@ -15,7 +16,6 @@
 // TODO : mak raine
 // todo : mak mame
 // TODO : neocore unit test
-
 
 #define SCREEN_X_MIN 0
 #define SCREEN_X_MAX 320
@@ -48,10 +48,13 @@ static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 int main();
 
 /*------------------------
+  Function to get the next position of the ball based on its slope and direction.
+    - Calculate the next position of the ball based on its current position, slope, direction, and speed,
+    enabling realistic movement in the game.
 
-  Function to get the next position of the ball based on its slope and direction
-
+    - It returns the updated position for the ball in the next step.
 -------------------------*/
+
 Vec2short get_next_ball_position(Vec2short current_position, short slope, enum direction direction, int speed) {
   Vec2short next_position = {current_position.x, current_position.y};
   if (slope != 0 && current_position.x % slope == 0) next_position.y = (slope > 0) ? next_position.y + speed : next_position.y - speed;
@@ -60,9 +63,8 @@ Vec2short get_next_ball_position(Vec2short current_position, short slope, enum d
 }
 
 /*------------------------
-
   Function to initialize a racquet
-
+    - Init a racquet represented by a "GFX_Picture_Physic" structure with specific graphics and collision properties.
 -------------------------*/
 
 static void init_racquet(GFX_Picture_Physic *racquet) {
@@ -74,9 +76,8 @@ static void init_racquet(GFX_Picture_Physic *racquet) {
 }
 
 /*------------------------
-
   Function to initialize the state of the ball
-
+    - Init the ball's state with an initial slope, direction, and position obtained from the "ball" object.
 -------------------------*/
 
 static void init_ball_state(BallState *ball_state) {
@@ -86,9 +87,8 @@ static void init_ball_state(BallState *ball_state) {
 }
 
 /*------------------------
-
   Function to initialize the game
-
+    - Init the game environment and elements, including the racquets, ball, and boundary walls, to prepare for the start of the game.
 -------------------------*/
 
 static void init() {
@@ -105,9 +105,8 @@ static void init() {
 }
 
 /*------------------------
-
   Function to display the game
-
+    - Show the game elements on the screen by using the "display_gfx_picture_physic" function to display the racquets and ball at specific positions. It also initializes the ball's state using the "init_ball_state" function.
 -------------------------*/
 
 static void display() {
@@ -118,9 +117,11 @@ static void display() {
 }
 
 /*------------------------
-
   Function to update game logic
-
+    - Check if the ball has hit the left or right edge of the game screen.
+      If so, it displays the winner (either "PLAYER WINS" or "COMPUTER WINS")
+        and prompts the player to press "A" to continue.
+      The game then restarts by calling the "main" function.
 -------------------------*/
 
 static void update_logic() {
@@ -137,9 +138,9 @@ static void update_logic() {
 }
 
 /*------------------------
-
   Function to determine the ball's slope based on its position relative to the racquet
-
+    - Calculate the slope of the ball's movement based on its position relative to a given racquet.
+      It then adjusts the vertical movement of the ball using the calculated slope.
 -------------------------*/
 
 static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
@@ -152,9 +153,12 @@ static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
 }
 
 /*------------------------
-
   Function to update the ball's position and handle collisions
-
+    - Manage the ball's movement, collision detection, and position updates based on game logic and interactions with the game boundaries and racquets.
+      It handles collisions with the upper and lower walls to reverse the vertical movement of the ball when necessary.
+      Additionally, it adjusts the slope and direction of the ball if it collides with the player's racquet or the AI's racquet,
+        and then calculates the next position of the ball
+        using the updated slope and direction.
 -------------------------*/
 
 /*
@@ -227,9 +231,10 @@ static void update_ball() {
 }
 
 /*------------------------
-
   Function to update player-controlled racquet
-
+    - The "update_player" function allows the player to control their racquet using the joypad.
+      It moves the racquet up or down based on the player's input,
+        ensuring that the racquet stays within the vertical boundaries of the game area.
 -------------------------*/
 
 static void update_player() {
@@ -242,9 +247,10 @@ static void update_player() {
 }
 
 /*------------------------
-
   Function to update AI-controlled racquet
-
+    - Control the AI-controlled racquet's movement.
+      It periodically observes the ball's position and adjusts its own position
+        (up or down) to try to intercept the ball during the game.
 -------------------------*/
 
 static void update_ia() {
@@ -267,9 +273,16 @@ static void update_ia() {
 }
 
 /*------------------------
-
   Function to update the game state
-
+    - This function is the main update loop of the game.
+      It calls four sub-functions in sequence to handle different aspects of the game:
+      - "update_logic": Handles game logic, such as checking for win conditions when the ball reaches the left or right edges of the screen.
+      - "update_ball": Manages the movement and collisions of the ball during the game.
+      - "update_player": Controls the player's racquet movement based on their input.
+      - "update_ia": Controls the AI-controlled racquet's movement to intercept the ball.
+    - In summary, the "update" function orchestrates the game's mechanics by updating
+        game logic, ball movement, player racquet,
+        and AI-controlled racquet positions in each game loop iteration
 -------------------------*/
 
 static void update() {
@@ -280,9 +293,23 @@ static void update() {
 }
 
 /*------------------------
-
   Main function of the game
+    - The "main" function is the entry point of the program and serves as the game loop. Here's a concise explanation of the function:
+      - It first initializes the game environment and elements by calling the "init" function.
+      - Then, it displays the initial game state by calling the "display" function.
+      - The program enters a continuous loop (while loop) that represents the main game loop.
+      - Inside the game loop, it waits for the vertical blanking period using "wait_vbl()."
+      - After waiting for the vertical blank, it updates the game state
+        by calling the "update" function, which manages game logic and element movements.
 
+      - The loop then closes the vertical blanking period using "close_vbl()."
+      - The loop continues indefinitely due to the "while(1)" condition,
+        keeping the game running.
+
+  - In summary, the "main" function
+    initializes the game, displays the initial state,
+    and enters an infinite game loop where
+    it updates the game state and keeps the game running until termination.
 -------------------------*/
 
 int main() {
