@@ -10,12 +10,6 @@
 
 * ----------------------------------------------- */
 
-// TODO : mak serve:raine neocore
-// TODO : bug mame-profile in standalone mode
-// TODO : mak raine
-// todo : mak mame
-// TODO : neocore unit test
-
 #define SCREEN_X_MIN 0
 #define SCREEN_X_MAX 320
 #define SCREEN_Y_MIN 0
