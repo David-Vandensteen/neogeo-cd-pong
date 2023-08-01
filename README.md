@@ -1,7 +1,9 @@
 # neogeo-cd-pong
 
 This code is a simple implementation of the classic game Pong for the Neo Geo CD,
-using a library called "Neocore" (https://github.com/David-Vandensteen/neocore) for operations, graphics and building.
+using a dev kit "Neocore" (https://github.com/David-Vandensteen/neocore)  
+
+See **src\main.c**  
 
 The code defines several constants for screen dimensions, speed of the paddles and ball, and a timeout for the AI's direction change.
 It also defines an enumeration to represent the possible directions of the ball (NONE, UP, DOWN, LEFT, RIGHT).
@@ -40,20 +42,29 @@ To make a fully functional and polished Pong game, you can consider adding more 
 git clone git@github.com:David-Vandensteen/neogeo-cd-pong.git
 ```
 
-## Building the project
+## Building
 ```cmd
-cd neogeo-cd-pong
+cd neogeo-cd-pong\src
+```
+
+```cmd
 mak
 ```
 
-## Testing the project  
+## Testing
 
-With Raine  
+**With Raine**
 ```cmd
 mak run:raine
 ```
 
-With Mame  
+**With Mame**
 ```cmd
 mak run:mame
+```
+
+## Release
+Build a iso & chd to distribute the game :  
+```cmd
+mak dist
 ```
