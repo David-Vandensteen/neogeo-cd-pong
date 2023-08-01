@@ -34,3 +34,26 @@ The game loop updates the game state and refreshes the screen accordingly.
 
 Overall, this code provides the foundation for a simple Pong game on a Neo Geo CD system using the "Neocore" library.  
 To make a fully functional and polished Pong game, you can consider adding more features such as scoring, multiple levels of difficulty, better collision handling, and graphical enhancements.
+
+## Clone this repo
+```cmd
+git clone git@github.com:David-Vandensteen/neogeo-cd-pong.git
+```
+
+## Building the project
+```cmd
+cd neogeo-cd-pong
+mak
+```
+
+## Testing the project  
+
+With Raine  
+```cmd
+mak run:raine
+```
+
+With Mame  
+```cmd
+mak run:mame
+```
