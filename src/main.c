@@ -157,39 +157,6 @@ static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
         using the updated slope and direction.
 -------------------------*/
 
-/*
-static void update_ball() {
-  Vec2short next_position = get_next_ball_position(
-    ball_state.position,
-    ball_state.slope,
-    ball_state.direction,
-    BALL_SPEED
-  );
-
-  BOOL collide_player = collide_box(&ball.box, &racquet[0].box);
-  BOOL collide_ia = collide_box(&ball.box, &racquet[1].box);
-  BOOL collide_upper_wall = collide_box(&upper_wall, &ball.box);
-  BOOL collide_lower_wall = collide_box(&lower_wall, &ball.box);
-
-  if (collide_upper_wall || collide_lower_wall) {
-    ball_state.slope = -ball_state.slope;
-  }
-
-  if (collide_player || collide_ia) {
-    ball_state.slope = -ball_state.slope;
-    ball_state.direction = (collide_player) ? RIGHT : LEFT;
-  }
-
-  // set_position_gfx_picture_physic(&ball, next_position);
-  init_log();
-  log_short("CUR X", ball_state.position.x);
-  log_short("CUR Y", ball_state.position.y);
-  log_short("NEXT X", next_position.x);
-  log_short("NEXT Y", next_position.y);
-  set_position_gfx_picture_physic_patched(&ball, next_position);
-}
-*/
-
 static void update_ball() {
   BOOL collide_player = collide_box(&ball.box, &racquet[0].box);
   BOOL collide_ia = collide_box(&ball.box, &racquet[1].box);
@@ -201,18 +168,15 @@ static void update_ball() {
   if (
       (collide_upper_wall && ball_state.slope < 0)
       || (collide_lower_wall && ball_state.slope > 0)
-    ) ball_state.slope = ball_state.slope * -1;
+    ) ball_state.slope = -ball_state.slope;
 
-  init_log();
-
-  if (collide_player || ball_state.position.x <= SCREEN_X_MIN) {
-    slope_ball(&ball_state, racquet[0]);
-    ball_state.direction = RIGHT;
-  }
-
-  if (collide_ia || ball_state.position.x >= SCREEN_X_MAX) {
-    slope_ball(&ball_state, racquet[1]);
-    ball_state.direction = LEFT;
+  if (collide_player || collide_ia) {
+    if (collide_player) {
+      slope_ball(&ball_state, racquet[0]);
+    } else {
+      slope_ball(&ball_state, racquet[1]);
+    }
+    ball_state.direction = (collide_player) ? RIGHT : LEFT;
   }
 
   set_position_gfx_picture_physic(
