@@ -1,6 +1,5 @@
 #include <neocore.h>
 #include "externs.h"
-#include "main.h"
 
 /* -----------------------------------------------
 
@@ -25,9 +24,6 @@
 #define RACQUET_SPEED 4
 #define BALL_SPEED 3
 #define IA_DIRECTION_MAX_TIMEOUT 25
-
-// todo : neocore expose direction ?
-enum direction { NONE, UP, DOWN, LEFT, RIGHT };
 
 typedef struct BallState {
   Vec2short position;
