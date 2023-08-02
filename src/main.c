@@ -193,10 +193,10 @@ static void update_ball() {
 
 static void update_player() {
   update_joypad(0);
-  if (joypad_is_up(0) && get_y_gpp(racquet[0]) > SCREEN_Y_MIN) move_gpp(&racquet[0], 0, -RACQUET_SPEED);
+  if (joypad_is_up(0) && get_y_gfx_picture_physic(racquet[0]) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet[0], 0, -RACQUET_SPEED);
 
-  if (joypad_is_down(0) && get_y_gpp(racquet[0]) < SCREEN_Y_MAX - racquet[0].gfx_picture.pixel_height) {
-    move_gpp(&racquet[0], 0, RACQUET_SPEED);
+  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet[0]) < SCREEN_Y_MAX - racquet[0].gfx_picture.pixel_height) {
+    move_gfx_picture_physic(&racquet[0], 0, RACQUET_SPEED);
   }
 }
 
