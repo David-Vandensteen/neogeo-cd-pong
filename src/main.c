@@ -138,7 +138,20 @@ static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
   if (ball_local_coord.y >= 0 && ball_local_coord.y < 22) {
     ball_state->slope = 2;
   } else if (ball_local_coord.y >= 22 && ball_local_coord.y < 44) {
-    ball_state->slope = 0;
+    switch (get_random(3)) {
+      case 0:
+        ball_state->slope = -10;
+        break;
+
+      default:
+      case 1:
+        ball_state->slope = 0;
+        break;
+
+      case 3:
+        ball_state->slope = 10;
+        break;
+    }
   } else if (ball_local_coord.y >= 44) ball_state->slope = -2;
 }
 
