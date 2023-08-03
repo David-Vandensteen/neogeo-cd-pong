@@ -10,9 +10,7 @@ using a dev kit "Neocore" https://github.com/David-Vandensteen/neocore
 
 See **src\main.c**  
 
-The code defines several constants for screen dimensions, speed of the paddles and ball, and a timeout for the AI's direction change.
-It also defines an enumeration to represent the possible directions of the ball (NONE, UP, DOWN, LEFT, RIGHT).
-
+The code defines several constants for screen dimensions, speed of the paddles and ball, and a timeout for the AI's direction change.  
 A structure named "BallState" is defined to store the current state of the ball, including its position, slope, and direction.
 
 Two static boxes represent the upper and lower walls of the game.  
