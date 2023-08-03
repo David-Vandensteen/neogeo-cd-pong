@@ -1,6 +1,8 @@
 #include <neocore.h>
 #include "externs.h"
 
+// TODO : neocore flip support
+
 /* -----------------------------------------------
 
     Pong sample for Neo Geo CD over neocore kit
@@ -28,7 +30,9 @@ typedef struct BallState {
 static Box upper_wall;
 static Box lower_wall;
 
-static GFX_Picture_Physic racquet[2];
+static GFX_Picture playfield;
+static GFX_Picture_Physic racquet1;
+static GFX_Picture_Physic racquet2;
 static GFX_Picture_Physic ball;
 static BallState ball_state;
 
@@ -53,19 +57,6 @@ Vec2short get_next_ball_position(Vec2short current_position, short slope, enum d
 }
 
 /*------------------------
-  Function to initialize a racquet
-    - Init a racquet represented by a "GFX_Picture_Physic" structure with specific graphics and collision properties.
--------------------------*/
-
-static void init_racquet(GFX_Picture_Physic *racquet) {
-  init_gfx_picture_physic(racquet, &racquet_asset, &racquet_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-
-  // --------------------------------------------------------neocore patch
-  racquet->gfx_picture.pixel_height = racquet->gfx_picture.pixel_height - 64;
-  // --------------width patch ?
-}
-
-/*------------------------
   Function to initialize the state of the ball
     - Init the ball's state with an initial slope, direction, and position obtained from the "ball" object.
 -------------------------*/
@@ -83,8 +74,18 @@ static void init_ball_state(BallState *ball_state) {
 
 static void init() {
   init_gpu();
-  init_racquet(&racquet[0]);
-  init_racquet(&racquet[1]);
+  init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
+
+  init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
+  // --------------------------------------------------------neocore patch
+  racquet1.gfx_picture.pixel_height = racquet1.gfx_picture.pixel_height - 64;
+  // --------------width patch ?
+
+  init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
+  // --------------------------------------------------------neocore patch
+  racquet2.gfx_picture.pixel_height = racquet2.gfx_picture.pixel_height - 64;
+  // --------------width patch ?
+
   init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX); // TODO : neocore : AUTOBOX not working
 
   init_box(&upper_wall, 320, 16, 0, 0);
@@ -100,8 +101,9 @@ static void init() {
 -------------------------*/
 
 static void display() {
-  display_gfx_picture_physic(&racquet[0], 16, 16);
-  display_gfx_picture_physic(&racquet[1], 320 - 32, 16);
+  display_gfx_picture(&playfield, 0, 0);
+  display_gfx_picture_physic(&racquet1, 16, 16);
+  display_gfx_picture_physic(&racquet2, 320 - 32, 16);
   display_gfx_picture_physic(&ball, 50, 100);
   init_ball_state(&ball_state);
 }
@@ -165,8 +167,8 @@ static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
 -------------------------*/
 
 static void update_ball() {
-  BOOL collide_player = collide_box(&ball.box, &racquet[0].box);
-  BOOL collide_ia = collide_box(&ball.box, &racquet[1].box);
+  BOOL collide_player = collide_box(&ball.box, &racquet1.box);
+  BOOL collide_ia = collide_box(&ball.box, &racquet2.box);
   BOOL collide_upper_wall = collide_box(&upper_wall, &ball.box);
   BOOL collide_lower_wall = collide_box(&lower_wall, &ball.box);
 
@@ -179,9 +181,9 @@ static void update_ball() {
 
   if (collide_player || collide_ia) {
     if (collide_player) {
-      slope_ball(&ball_state, racquet[0]);
+      slope_ball(&ball_state, racquet1);
     } else {
-      slope_ball(&ball_state, racquet[1]);
+      slope_ball(&ball_state, racquet2);
     }
     ball_state.direction = (collide_player) ? RIGHT : LEFT;
   }
@@ -206,10 +208,10 @@ static void update_ball() {
 
 static void update_player() {
   update_joypad(0);
-  if (joypad_is_up(0) && get_y_gfx_picture_physic(racquet[0]) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet[0], 0, -RACQUET_SPEED);
+  if (joypad_is_up(0) && get_y_gfx_picture_physic(racquet1) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
 
-  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet[0]) < SCREEN_Y_MAX - racquet[0].gfx_picture.pixel_height) {
-    move_gfx_picture_physic(&racquet[0], 0, RACQUET_SPEED);
+  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet1) < SCREEN_Y_MAX - racquet1.gfx_picture.pixel_height) {
+    move_gfx_picture_physic(&racquet1, 0, RACQUET_SPEED);
   }
 }
 
@@ -224,16 +226,16 @@ static void update_ia() {
   if (ia_direction_timeout <= 0) {
     Vec2short ball_position = get_position_gfx_picture_physic(ball);
     enum direction ball_direction = NONE;
-    if (ball_position.y < get_y_gfx_picture_physic(racquet[1])) ball_direction = UP;
-    if (ball_position.y > get_y_gfx_picture_physic(racquet[1])) ball_direction = DOWN;
+    if (ball_position.y < get_y_gfx_picture_physic(racquet2)) ball_direction = UP;
+    if (ball_position.y > get_y_gfx_picture_physic(racquet2)) ball_direction = DOWN;
     ia_direction = ball_direction;
     ia_direction_timeout = get_random(IA_DIRECTION_MAX_TIMEOUT);
   }
 
-  if (ia_direction == UP && get_y_gfx_picture_physic(racquet[1]) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet[1], 0, -RACQUET_SPEED);
+  if (ia_direction == UP && get_y_gfx_picture_physic(racquet2) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet2, 0, -RACQUET_SPEED);
 
-  if (ia_direction == DOWN && get_y_gfx_picture_physic(racquet[1]) < SCREEN_Y_MAX - racquet[1].gfx_picture.pixel_height) {
-    move_gfx_picture_physic(&racquet[1], 0, RACQUET_SPEED);
+  if (ia_direction == DOWN && get_y_gfx_picture_physic(racquet2) < SCREEN_Y_MAX - racquet2.gfx_picture.pixel_height) {
+    move_gfx_picture_physic(&racquet2, 0, RACQUET_SPEED);
   }
 
   ia_direction_timeout -= 1;
