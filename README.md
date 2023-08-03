@@ -1,7 +1,11 @@
-# neogeo-cd-pong
+![Platform](https://img.shields.io/badge/platform-%20%7C%20windows-lightgrey) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)  
 
+# neogeo-cd-pong  
+  
+![](https://media.giphy.com/media/mDknOSUEaP0zcI7tzV/giphy.gif)  
+  
 This code is a simple implementation of the classic game Pong for the Neo Geo CD,
-using a dev kit "Neocore" (https://github.com/David-Vandensteen/neocore)  
+using a dev kit "Neocore" https://github.com/David-Vandensteen/neocore  
 
 See **src\main.c**  
 
@@ -17,7 +21,6 @@ The ball is also represented by a "GFX_Picture_Physic" structure.
 Another variable keeps track of the current direction of the AI (computer-controlled paddle) and a timeout counter for its direction change.
 
 The function "get_next_ball_position" calculates the next position of the ball based on its current slope and direction.  
-The "init_racquet" function initializes a racquet with graphics.  
 The "init_ball_state" function sets the initial state of the ball.  
 
 The "init" function initializes the game by setting up the GPU, initializing racquets and the ball, and positioning the walls.  
