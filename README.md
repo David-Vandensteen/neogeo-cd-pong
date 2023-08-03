@@ -3,6 +3,7 @@
 # neogeo-cd-pong  
   
 ![](https://media.giphy.com/media/mDknOSUEaP0zcI7tzV/giphy.gif)  
+---------------------------------------------------- **_Visuals by Grass_**
   
 This code is a simple implementation of the classic game Pong for the Neo Geo CD,
 using a dev kit "Neocore" https://github.com/David-Vandensteen/neocore  
