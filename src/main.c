@@ -1,5 +1,6 @@
 #include <neocore.h>
 #include "externs.h"
+#include "sound.h"
 
 // TODO : neocore flip support
 
@@ -38,6 +39,68 @@ static BallState ball_state;
 
 static enum direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
+
+enum sound_state { IDLE, PLAYING };
+
+typedef struct Adpcm_player {
+  enum sound_state state;
+  DWORD remaining_frame;
+} Adpcm_player;
+
+Adpcm_player adpcm_player;
+
+void log(char *message) {
+  log_info(message);
+}
+
+void init_adpcm_player() {
+  adpcm_player.state = IDLE;
+  adpcm_player.remaining_frame = 0;
+}
+
+void add_remaining_frame_adpcm_player(DWORD frame) {
+  adpcm_player.remaining_frame += frame;
+  adpcm_player.state = PLAYING;
+}
+
+Adpcm_player *get_adpcm_player() {
+  return &adpcm_player;
+}
+
+void update_adpcm_player() {
+  if (adpcm_player.remaining_frame != 0) {
+    adpcm_player.state = PLAYING;
+    adpcm_player.remaining_frame -= 1;
+  }
+
+  if (adpcm_player.remaining_frame > 0 && adpcm_player.state != IDLE) {
+    adpcm_player.state = PLAYING;
+    adpcm_player.remaining_frame -= 1;
+  }
+
+  if (adpcm_player.remaining_frame == 0) adpcm_player.state = IDLE;
+}
+
+void wait_vbl_patched() {
+  update_adpcm_player();
+  wait_vbl();
+}
+
+DWORD get_frame_to_second(DWORD frame) {
+  return frame / 60;
+}
+
+DWORD get_second_to_frame(DWORD second) {
+  return second * 60;
+}
+
+void play_sound() {
+  if (get_adpcm_player()->state == IDLE) {
+    send_sound_command(ADPCM_STOP);
+    send_sound_command(ADPCM_MIXKIT_GAME_CLICK_1114);
+    add_remaining_frame_adpcm_player(get_second_to_frame(1));
+  }
+}
 
 int main();
 
@@ -186,6 +249,7 @@ static void update_ball() {
       slope_ball(&ball_state, racquet2);
     }
     ball_state.direction = (collide_player) ? RIGHT : LEFT;
+    play_sound();
   }
 
   set_position_gfx_picture_physic(
@@ -285,7 +349,7 @@ int main() {
   init();
   display();
   while(1) {
-    wait_vbl();
+    wait_vbl_patched();
     update();
     close_vbl();
   };
