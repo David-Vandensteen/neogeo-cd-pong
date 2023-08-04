@@ -15,14 +15,4 @@
   <pict id="ball_asset">
     <file>assets\gfx\ball.png</file>
   </pict>
-
-<!--
-  <pict id="racquet_asset">
-    <file>assets\gfx\racquet.png</file>
-    <flips>xyz</flips>
-  </pict>
-  <pict id="ball_asset">
-    <file>assets\gfx\ball.png</file>
-  </pict>
--->
 </chardata>
