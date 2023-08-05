@@ -53,6 +53,14 @@ void log(char *message) {
   log_info(message);
 }
 
+void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
+  BYTE i = 0;
+  if (palCount) log_word("PALCOUNT", palette->palCount);
+  if (data) {
+    for(i = 0; i < (palette->palCount MULT16); i++) log_word("DATA", palette->data[i]);
+  }
+}
+
 void init_adpcm_player() {
   adpcm_player.state = IDLE;
   adpcm_player.remaining_frame = 0;
@@ -138,7 +146,6 @@ static void init_ball_state(BallState *ball_state) {
 static void init() {
   init_gpu();
   init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
-
   init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
   // --------------------------------------------------------neocore patch
   racquet1.gfx_picture.pixel_height = racquet1.gfx_picture.pixel_height - 64;
