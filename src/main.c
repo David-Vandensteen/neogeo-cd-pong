@@ -176,6 +176,11 @@ static void display() {
   display_gfx_picture_physic(&racquet2, 320 - 32, 16);
   display_gfx_picture_physic(&ball, 50, 100);
   init_ball_state(&ball_state);
+  init_log();
+  set_pos_log(3, 5);
+  log("PRESS A TO START");
+  pause();
+  init_log();
 }
 
 /*------------------------
