@@ -2,10 +2,6 @@
 # David Vandensteen
 # MIT
 
-# TODO : rule dist:iso
-# TODO : rule dist:mame
-# TODO : mame is not needed to make a mame dist
-
 param (
   [Parameter(Mandatory=$true)][String] $ConfigFile,
   [String] $Rule = "default"
@@ -219,20 +215,39 @@ function Main {
 
   function BuilderISO {
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-iso.ps1"
+
+    Write-Host "copy assets to $($buildConfig.pathBuild)\assets" -ForegroundColor Blue # TODO : remove hardcoded assets folder
+    Robocopy /MIR assets "$($buildConfig.pathBuild)\assets" | Out-Null
+    # TODO : check lastexitcode
+
+    Write-Cache `
+      -PRGFile $buildConfig.PRGFile `
+      -SpriteFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cd" `
+      -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
+      -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template" `
+
+    if ($config.project.sound.sfx.pcm) {
+      Write-SFX `
+      -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
+      -PCMFile "$($buildConfig.pathBuild)\$($config.project.sound.sfx.pcm)"
+    }
+
+    if ($config.project.sound.sfx.z80) {
+      Write-SFX `
+        -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
+        -Z80File "$($buildConfig.pathBuild)\$($config.project.sound.sfx.z80)"
+    }
+
     Write-ISO `
       -PRGFile $buildConfig.PRGFile `
       -SpriteFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cd" `
       -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).iso" `
       -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-      -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template"
+      -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template" `
 
     $configCDDA = $null
 
     if ($Config.project.sound.cdda.tracks.track) { $configCDDA = $config.project.sound.cdda }
-
-    Write-Host "copy assets to $($buildConfig.pathBuild)\assets" -ForegroundColor Blue
-    Robocopy /MIR assets "$($buildConfig.pathBuild)\assets" | Out-Null
-    # TODO : check lastexitcode
 
     Write-CUE `
       -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
@@ -267,22 +282,14 @@ function Main {
     BuilderProgram
     BuilderISO
   }
-  if ($Rule -eq "run") {
-    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mame.ps1"
-    BuilderSprite
-    BuilderProgram
-    BuilderISO
-    BuilderMame
-    RunnerMame
-  }
-  if ($Rule -eq "run:raine") {
+  if ($Rule -eq "run:raine" -or $Rule -eq "raine") {
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-raine.ps1"
     BuilderSprite
     BuilderProgram
     BuilderISO
     RunnerRaine
   }
-  if ($Rule -eq "run:mame") {
+  if ($Rule -eq "run:mame" -or $Rule -eq "mame" -or $Rule -eq "run") {
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mame.ps1"
     BuilderSprite
     BuilderProgram
@@ -290,7 +297,25 @@ function Main {
     BuilderMame
     RunnerMame
   }
-  if ($Rule -eq "serve") {
+  if ($Rule -eq "serve:raine") {
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-sprite.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-program.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-iso.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-raine.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-watcher.ps1"
+    While ($true) {
+      BuilderSprite
+      BuilderProgram
+      BuilderISO
+      RunnerRaine
+      Watch-Folder -Path "."
+      Stop-Emulators
+    }
+  }
+  if ($Rule -eq "serve:mame" -or $Rule -eq "serve") {
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-sprite.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-program.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-iso.ps1"
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mame.ps1"
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-watcher.ps1"
     While ($true) {
@@ -302,6 +327,32 @@ function Main {
       Watch-Folder -Path "."
       Stop-Emulators
     }
+  }
+  if ($Rule -eq "dist:iso") {
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-dist.ps1"
+    if ((Test-Path -Path $buildConfig.pathDist) -eq $false) { New-Item -Path $buildConfig.pathDist -ItemType Directory -Force }
+    BuilderSprite
+    BuilderProgram
+    BuilderISO
+    Write-Dist `
+      -ProjectName $buildConfig.projectName `
+      -PathDestination "$($buildConfig.pathDist)\$($buildConfig.projectName)\$($buildConfig.version)" `
+      -ISOFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).iso" `
+      -CUEFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
+  }
+  if ($Rule -eq "dist:mame") {
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mame.ps1"
+    Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-dist.ps1"
+    if ((Test-Path -Path $buildConfig.pathDist) -eq $false) { New-Item -Path $buildConfig.pathDist -ItemType Directory -Force }
+    BuilderSprite
+    BuilderProgram
+    BuilderISO
+    BuilderMame
+    Write-Dist `
+      -ProjectName $buildConfig.projectName `
+      -PathDestination "$($buildConfig.pathDist)\$($buildConfig.projectName)\$($buildConfig.version)" `
+      -CHDFile "$($buildConfig.pathMame)\roms\neocdz\$($buildConfig.projectName).chd" `
+      -HashFile "$($buildConfig.pathMame)\hash\neocd.xml"
   }
   if ($Rule -eq "dist") {
     Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mame.ps1"
