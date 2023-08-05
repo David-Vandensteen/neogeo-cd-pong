@@ -14,7 +14,7 @@ The code defines several constants for screen dimensions, speed of the paddles a
 A structure named "BallState" is defined to store the current state of the ball, including its position, slope, and direction.
 
 Two static boxes represent the upper and lower walls of the game.  
-There are two paddles (racquets) for the players, represented by an array of "GFX_Picture_Physic" structures.
+There are two paddles (racquets).
 
 The ball is also represented by a "GFX_Picture_Physic" structure.  
 Another variable keeps track of the current direction of the AI (computer-controlled paddle) and a timeout counter for its direction change.
