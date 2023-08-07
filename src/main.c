@@ -20,9 +20,6 @@
 #define BALL_SPEED 3
 #define IA_DIRECTION_MAX_TIMEOUT 25
 
-#define GAME_WAITING 0
-#define GAME_PLAYING 1
-
 typedef struct BallState {
   Vec2short position;
   short slope;
@@ -41,10 +38,11 @@ static BallState ball_state;
 static enum direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 
-static BOOL game_state = GAME_WAITING;
+static enum Game_state { GAME_WAITING, GAME_PLAYING };
+static enum Game_state game_state = GAME_WAITING;
 
 static void wait_game_start() {
-  if (game_state != GAME_PLAYING) {
+  if (game_state == GAME_WAITING) {
     wait_vbl();
     init_log();
     set_pos_log(3, 5);
