@@ -1,15 +1,16 @@
-#include <neocore.h>
-#include "externs.h"
-#include "sound.h"
-
 /* -----------------------------------------------
 
     Pong sample for Neo Geo CD over neocore kit
 
     @2023
     David Vandensteen
+    Visuals by Grass
 
 * ----------------------------------------------- */
+
+#include <neocore.h>
+#include "externs.h"
+#include "sound.h"
 
 #define SCREEN_X_MIN 0
 #define SCREEN_X_MAX 320
