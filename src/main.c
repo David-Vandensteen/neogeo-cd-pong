@@ -90,6 +90,7 @@ static void init_ball_state(BallState *ball_state) {
 
 static void init() {
   init_all_system();
+  play_cdda(2);
   init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
   init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
   // --------------------------------------------------------neocore patch

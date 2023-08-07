@@ -1,4 +1,5 @@
 Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-install-component.ps1"
+Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mp3towav.ps1"
 
 function Write-ISO {
   param (
@@ -72,6 +73,15 @@ function Write-CUE {
       [Parameter(Mandatory=$true)][int] $Index,
       [Parameter(Mandatory=$true)][String] $Pregap
     )
+
+    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($File)
+    $ext = [System.IO.Path]::GetExtension($File)
+    $path = [System.IO.Path]::GetDirectoryName($File)
+
+    if ($ext -eq ".mp3") {
+      $File = "$path\$baseName.wav"
+    }
+
     return (
       'FILE "{0}" WAVE
   TRACK {1:d2} AUDIO
@@ -87,6 +97,16 @@ function Write-CUE {
     $tracks = $Config.tracks.track
     $tracks | ForEach-Object {
       Get-CUETrack -File $_.file -Index $_.id -Pregap $_.pregap | Out-File -Encoding utf8 -FilePath $OutputFile -Append -Force
+
+      $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.file)
+      $path = [System.IO.Path]::GetDirectoryName($_.file)
+      $ext = [System.IO.Path]::GetExtension($_.file)
+      Write-Host "File : $($_.file)"
+      Write-Host "EXT: $ext"
+      if ($ext -eq ".mp3") {
+        Write-WAV -mpg123 "$($buildConfig.pathBuild)\..\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" -MP3File $_.file -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav"
+      }
+
     }
   }
   (Get-Content -Path $OutputFile -Raw).Replace("`r`n","`n") | Set-Content -Path $OutputFile -Force -NoNewline
