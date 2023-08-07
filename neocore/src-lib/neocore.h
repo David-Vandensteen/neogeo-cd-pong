@@ -45,6 +45,7 @@
 #define AUTOBOX 1
 
 enum direction { NONE, UP, DOWN, LEFT, RIGHT };
+enum sound_state { IDLE, PLAYING };
 
   //--------------------------------------------------------------------------//
  //                          STRUCTURE                                       //
@@ -98,6 +99,11 @@ typedef struct GFX_Scroller {
   scrollerInfo *scrollerInfoDAT;
   paletteInfo *paletteInfoDAT;
 } GFX_Scroller;
+
+typedef struct Adpcm_player {
+  enum sound_state state;
+  DWORD remaining_frame;
+} Adpcm_player;
 
   //--------------------------------------------------------------------------//
  //                                   GFX                                    //
@@ -568,7 +574,7 @@ char get_sin(WORD index);
 /*------------------------------*/
 
 DWORD inline wait_vbl_max(WORD nb);
-#define wait_vbl() waitVBlank()
+#define wait_vbl() update_adpcm_player(); waitVBlank()
 
   /*------------------------------*/
  /* GPU SPRITE INDEX MANAGEMENT  */
@@ -690,6 +696,7 @@ BOOL        joypad_p1_is_c();
 BOOL        joypad_p1_is_d();
 
 void update_joypad(BYTE id);
+void update_joypad_edge(BYTE id);
 
 void joypad_update(BYTE id);
 BOOL joypad_is_up(BYTE id);
@@ -702,6 +709,8 @@ BOOL joypad_is_b(BYTE id);
 BOOL joypad_is_c(BYTE id);
 BOOL joypad_is_d(BYTE id);
 
+void debug_joypad(BYTE id);
+
 /**
  * @deprecated since 1.0.5
  * @see debug_joypad(id) instead
@@ -712,6 +721,9 @@ void inline debug_joypad_p1();
  //                                  UTIL                                      //
 //----------------------------------------------------------------------------//
 
+DWORD get_frame_to_second(DWORD frame);
+DWORD get_second_to_frame(DWORD second);
+void init_all_system();
 Vec2short get_relative_position(Box box, Vec2short world_coord);
 void pause();
 void sleep(DWORD frame);
@@ -729,8 +741,18 @@ WORD free_ram_info();
 /*---------------*/
 
 void init_log();
+
+/**
+ * @deprecated since 1.0.5
+ * @see set_position_log(x, y)
+ */
 void set_pos_log(WORD _x, WORD _y);
+
+void set_position_log(WORD _x, WORD _y);
+
 WORD inline log_info(char *txt);
+void log(char *message);
+
 void inline log_word(char *label, WORD value);
 void inline log_int(char *label, int value);
 void inline log_dword(char *label, DWORD value);
@@ -738,9 +760,18 @@ void inline log_short(char *label, short value);
 void inline log_byte(char *label, BYTE value);
 void inline log_bool(char *label, BOOL value);
 void inline log_gas(char *label, GFX_Animated_Sprite *gfx_animated_sprite);
-  void inline log_spriteInfo(char *label, spriteInfo *si);
-  void inline log_box(char *label, Box *b);
+void inline log_spriteInfo(char *label, spriteInfo *si);
+void inline log_box(char *label, Box *b);
 void inline log_pictureInfo(char *label, pictureInfo *pi);
+
+  /*---------------*/
+ /* SOUND         */
+/*---------------*/
+
+void init_adpcm();
+void update_adpcm_player();
+void add_remaining_frame_adpcm_player(DWORD frame);
+Adpcm_player *get_adpcm_player();
 
   /*---------------*/
  /* UTIL VECTOR   */
