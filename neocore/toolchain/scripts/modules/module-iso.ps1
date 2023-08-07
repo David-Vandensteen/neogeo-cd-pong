@@ -79,6 +79,9 @@ function Write-CUE {
     $path = [System.IO.Path]::GetDirectoryName($File)
 
     if ($ext -eq ".mp3") {
+      if ((Test-Path -Path "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64") -eq $false) {
+        Install-Component -URL "$($buildConfig.baseURL)/mpg123-1.31.3-static-x86-64.zip" -PathDownload $buildConfig.pathSpool -PathInstall "$($buildConfig.pathNeocore)\bin"
+      }
       $File = "$path\$baseName.wav"
     }
 
@@ -97,16 +100,6 @@ function Write-CUE {
     $tracks = $Config.tracks.track
     $tracks | ForEach-Object {
       Get-CUETrack -File $_.file -Index $_.id -Pregap $_.pregap | Out-File -Encoding utf8 -FilePath $OutputFile -Append -Force
-
-      $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.file)
-      $path = [System.IO.Path]::GetDirectoryName($_.file)
-      $ext = [System.IO.Path]::GetExtension($_.file)
-      Write-Host "File : $($_.file)"
-      Write-Host "EXT: $ext"
-      if ($ext -eq ".mp3") {
-        Write-WAV -mpg123 "$($buildConfig.pathBuild)\..\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" -MP3File $_.file -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav"
-      }
-
     }
   }
   (Get-Content -Path $OutputFile -Raw).Replace("`r`n","`n") | Set-Content -Path $OutputFile -Force -NoNewline
