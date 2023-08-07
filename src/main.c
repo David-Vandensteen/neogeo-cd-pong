@@ -2,8 +2,6 @@
 #include "externs.h"
 #include "sound.h"
 
-// TODO : neocore flip support
-
 /* -----------------------------------------------
 
     Pong sample for Neo Geo CD over neocore kit
@@ -40,18 +38,6 @@ static BallState ball_state;
 static enum direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 
-enum sound_state { IDLE, PLAYING };
-
-typedef struct Adpcm_player {
-  enum sound_state state;
-  DWORD remaining_frame;
-} Adpcm_player;
-
-Adpcm_player adpcm_player;
-
-void log(char *message) {
-  log_info(message);
-}
 
 void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
   BYTE i = 0;
@@ -59,47 +45,6 @@ void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
   if (data) {
     for(i = 0; i < (palette->palCount MULT16); i++) log_word("DATA", palette->data[i]);
   }
-}
-
-void init_adpcm_player() {
-  adpcm_player.state = IDLE;
-  adpcm_player.remaining_frame = 0;
-}
-
-void add_remaining_frame_adpcm_player(DWORD frame) {
-  adpcm_player.remaining_frame += frame;
-  adpcm_player.state = PLAYING;
-}
-
-Adpcm_player *get_adpcm_player() {
-  return &adpcm_player;
-}
-
-void update_adpcm_player() {
-  if (adpcm_player.remaining_frame != 0) {
-    adpcm_player.state = PLAYING;
-    adpcm_player.remaining_frame -= 1;
-  }
-
-  if (adpcm_player.remaining_frame > 0 && adpcm_player.state != IDLE) {
-    adpcm_player.state = PLAYING;
-    adpcm_player.remaining_frame -= 1;
-  }
-
-  if (adpcm_player.remaining_frame == 0) adpcm_player.state = IDLE;
-}
-
-void wait_vbl_patched() {
-  update_adpcm_player();
-  wait_vbl();
-}
-
-DWORD get_frame_to_second(DWORD frame) {
-  return frame / 60;
-}
-
-DWORD get_second_to_frame(DWORD second) {
-  return second * 60;
 }
 
 void play_sound() {
@@ -144,7 +89,7 @@ static void init_ball_state(BallState *ball_state) {
 -------------------------*/
 
 static void init() {
-  init_gpu();
+  init_all_system();
   init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
   init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
   // --------------------------------------------------------neocore patch
@@ -361,7 +306,7 @@ int main() {
   init();
   display();
   while(1) {
-    wait_vbl_patched();
+    wait_vbl();
     update();
     close_vbl();
   };
