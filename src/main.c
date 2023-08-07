@@ -20,6 +20,9 @@
 #define BALL_SPEED 3
 #define IA_DIRECTION_MAX_TIMEOUT 25
 
+#define GAME_WAITING 0
+#define GAME_PLAYING 1
+
 typedef struct BallState {
   Vec2short position;
   short slope;
@@ -38,6 +41,19 @@ static BallState ball_state;
 static enum direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 
+static BOOL game_state = GAME_WAITING;
+
+static void wait_game_start() {
+  if (game_state != GAME_PLAYING) {
+    wait_vbl();
+    init_log();
+    set_pos_log(3, 5);
+    log("PRESS A TO START");
+    pause();
+    game_state = GAME_PLAYING;
+    init_log();
+  }
+}
 
 void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
   BYTE i = 0;
@@ -122,11 +138,6 @@ static void display() {
   display_gfx_picture_physic(&racquet2, 320 - 32, 16);
   display_gfx_picture_physic(&ball, 50, 100);
   init_ball_state(&ball_state);
-  init_log();
-  set_pos_log(3, 5);
-  log("PRESS A TO START");
-  pause();
-  init_log();
 }
 
 /*------------------------
@@ -310,6 +321,7 @@ int main() {
     wait_vbl();
     update();
     close_vbl();
+    if (game_state != GAME_PLAYING) wait_game_start();
   };
   close_vbl();
   return 0;
