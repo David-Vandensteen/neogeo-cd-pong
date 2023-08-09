@@ -1,16 +1,16 @@
-#include <neocore.h>
-#include "externs.h"
-
-// TODO : neocore flip support
-
 /* -----------------------------------------------
 
     Pong sample for Neo Geo CD over neocore kit
 
     @2023
     David Vandensteen
+    Visuals by Grass
 
 * ----------------------------------------------- */
+
+#include <neocore.h>
+#include "externs.h"
+#include "sound.h"
 
 #define SCREEN_X_MIN 0
 #define SCREEN_X_MAX 320
@@ -38,6 +38,37 @@ static BallState ball_state;
 
 static enum direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
+
+static enum Game_state { GAME_WAITING, GAME_PLAYING };
+static enum Game_state game_state = GAME_WAITING;
+
+static void wait_game_start() {
+  if (game_state == GAME_WAITING) {
+    wait_vbl();
+    init_log();
+    set_pos_log(3, 5);
+    log("PRESS A TO START");
+    pause();
+    game_state = GAME_PLAYING;
+    init_log();
+  }
+}
+
+void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
+  BYTE i = 0;
+  if (palCount) log_word("PALCOUNT", palette->palCount);
+  if (data) {
+    for(i = 0; i < (palette->palCount MULT16); i++) log_word("DATA", palette->data[i]);
+  }
+}
+
+void play_sound() {
+  if (get_adpcm_player()->state == IDLE) {
+    send_sound_command(ADPCM_STOP);
+    send_sound_command(ADPCM_MIXKIT_GAME_CLICK_1114);
+    add_remaining_frame_adpcm_player(get_second_to_frame(1));
+  }
+}
 
 int main();
 
@@ -73,9 +104,9 @@ static void init_ball_state(BallState *ball_state) {
 -------------------------*/
 
 static void init() {
-  init_gpu();
+  init_all_system();
+  play_cdda(2);
   init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
-
   init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
   // --------------------------------------------------------neocore patch
   racquet1.gfx_picture.pixel_height = racquet1.gfx_picture.pixel_height - 64;
@@ -186,6 +217,7 @@ static void update_ball() {
       slope_ball(&ball_state, racquet2);
     }
     ball_state.direction = (collide_player) ? RIGHT : LEFT;
+    play_sound();
   }
 
   set_position_gfx_picture_physic(
@@ -288,6 +320,7 @@ int main() {
     wait_vbl();
     update();
     close_vbl();
+    if (game_state != GAME_PLAYING) wait_game_start();
   };
   close_vbl();
   return 0;
