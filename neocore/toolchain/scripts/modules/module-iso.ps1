@@ -89,6 +89,7 @@ function Write-CUE {
         Install-Component -URL "$($buildConfig.baseURL)/mpg123-1.31.3-static-x86-64.zip" -PathDownload $buildConfig.pathSpool -PathInstall "$($buildConfig.pathNeocore)\bin"
       }
       Write-WAV -mpg123 "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav" -MP3File "$($buildConfig.pathBuild)\$path\$baseName.mp3"
+      $File = "$($buildConfig.pathBuild)\$path\$baseName.wav"
     }
 
     return (
