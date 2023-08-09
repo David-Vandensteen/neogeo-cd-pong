@@ -63,12 +63,14 @@ function Write-SFX {
 
 function Write-CUE {
   param (
+    [Parameter(Mandatory=$true)][String] $Rule,
     [Parameter(Mandatory=$true)][String] $OutputFile,
     [Parameter(Mandatory=$true)][String] $ISOName,
     [System.Xml.XmlElement] $Config
   )
   function Get-CUETrack {
     param (
+      [Parameter(Mandatory=$true)][String] $Rule,
       [Parameter(Mandatory=$true)][String] $File,
       [Parameter(Mandatory=$true)][int] $Index,
       [Parameter(Mandatory=$true)][String] $Pregap
@@ -78,11 +80,15 @@ function Write-CUE {
     $ext = [System.IO.Path]::GetExtension($File)
     $path = [System.IO.Path]::GetDirectoryName($File)
 
-    if ($ext -eq ".mp3") {
+    Write-Host $baseName
+    Write-Host $ext
+    Write-Host $path
+
+    if ($ext -eq ".mp3" -and $Rule -like "*mame") {
       if ((Test-Path -Path "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64") -eq $false) {
         Install-Component -URL "$($buildConfig.baseURL)/mpg123-1.31.3-static-x86-64.zip" -PathDownload $buildConfig.pathSpool -PathInstall "$($buildConfig.pathNeocore)\bin"
       }
-      $File = "$path\$baseName.wav"
+      Write-WAV -mpg123 "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav" -MP3File "$($buildConfig.pathBuild)\$path\$baseName.mp3"
     }
 
     return (
@@ -99,10 +105,11 @@ function Write-CUE {
   if ($Config) {
     $tracks = $Config.tracks.track
     $tracks | ForEach-Object {
-      Get-CUETrack -File $_.file -Index $_.id -Pregap $_.pregap | Out-File -Encoding utf8 -FilePath $OutputFile -Append -Force
+      Get-CUETrack -Rule $Rule -File $_.file -Index $_.id -Pregap $_.pregap | Out-File -Encoding ascii -FilePath $OutputFile -Append -Force
     }
   }
   (Get-Content -Path $OutputFile -Raw).Replace("`r`n","`n") | Set-Content -Path $OutputFile -Force -NoNewline
+  # (Get-Content -Path $OutputFile -Raw) | Out-File -Encoding ascii -FilePath $OutputFile -Force
 
   if ((Test-Path -Path $OutputFile) -eq $true) {
     Logger-Success -Message "builded CUE is available to $OutputFile"

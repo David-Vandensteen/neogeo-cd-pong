@@ -5,5 +5,5 @@ function Write-WAV {
     [Parameter(Mandatory=$true)][String] $WAVFile
   )
   Logger-Info -Message "convert $MP3File to $WAVFile"
-  Start-Process -NoNewWindow -FilePath $mpg123 -ArgumentList "-w $WAVFile $MP3File"
+  Start-Process -NoNewWindow -FilePath $mpg123 -ArgumentList "-w $WAVFile $MP3File" -Wait
 }
