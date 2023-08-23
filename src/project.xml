@@ -3,11 +3,51 @@
   <name>pong</name>
   <version>0.0.4</version>
   <makefile>Makefile</makefile>
-  <toolchainPath>..\neocore\toolchain</toolchainPath>
+  <neocorePath>..\neocore</neocorePath>
   <buildPath>..\build</buildPath>
   <distPath>..\dist</distPath>
-  <XMLDATFile>sprites.xml</XMLDATFile>
+  <gfx>
+    <DAT>
+      <chardata>
+        <setup>
+          <starting_tile>256</starting_tile>
+        </setup>
+        <pict id="playfield_asset">
+          <file>assets\gfx\playfield3.png</file>
+        </pict>
+        <pict id="racquet1_asset">
+          <file>assets\gfx\racquet1.png</file>
+        </pict>
+        <pict id="racquet2_asset">
+          <file>assets\gfx\racquet2.png</file>
+        </pict>
+        <pict id="ball_asset">
+          <file>assets\gfx\ball.png</file>
+        </pict>
+      </chardata>
+    </DAT>
+  </gfx>
+  <emulator>
+    <raine>
+      <exeFile>..\build\raine\raine32.exe</exeFile>
+    </raine>
+    <mame>
+      <exeFile>..\build\mame\mame64.exe</exeFile>
+    </mame>
+  </emulator>
+  <compiler>
+    <name>gcc</name>
+    <version>2.95.2</version>
+    <path>..\build\gcc\gcc-2.95.2</path>
+    <includePath>..\build\include</includePath>
+    <libraryPath>..\build\lib</libraryPath>
+    <systemFile>..\build\system\neocd.x</systemFile>
+  </compiler>
   <sound>
+    <sfx>
+      <pcm>assets\sounds\sfx\click.V1</pcm>
+      <z80>assets\sounds\sfx\click.M1</z80>
+    </sfx>
     <cdda>
       <tracks>
         <track>
@@ -17,9 +57,5 @@
         </track>
       </tracks>
     </cdda>
-    <sfx>
-      <pcm>assets\sounds\sfx\click.V1</pcm>
-      <z80>assets\sounds\sfx\click.M1</z80>
-    </sfx>
   </sound>
 </project>
