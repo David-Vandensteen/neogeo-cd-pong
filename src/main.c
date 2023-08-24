@@ -42,53 +42,6 @@ static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 static enum Game_state { GAME_WAITING, GAME_PLAYING };
 static enum Game_state game_state = GAME_WAITING;
 
-BOOL joypad_0_is_a() {
-  return joypad_is_a(0);
-}
-
-BOOL joypad_0_is_b() {
-  return joypad_is_b(0);
-}
-
-BOOL joypad_0_is_c() {
-  return joypad_is_c(0);
-}
-
-BOOL joypad_0_is_d() {
-  return joypad_is_d(0);
-}
-
-BOOL joypad_0_is_left() {
-  return joypad_is_left(0);
-}
-
-BOOL joypad_0_is_right() {
-  return joypad_is_right(0);
-}
-
-BOOL joypad_0_is_up() {
-  return joypad_is_up(0);
-}
-
-BOOL joypad_0_is_down() {
-  return joypad_is_down(0);
-}
-
-BOOL joypad_0_is_select() {
-  return joypad_0_is_select(0);
-}
-
-BOOL joypad_0_is_start() {
-  return joypad_is_start(0);
-}
-
-void pause_patch(BOOL (*exitFunc)()) {
-  update_joypad(0);
-  while(!exitFunc()) {
-    update_joypad(0);
-    wait_vbl();
-  }
-}
 
 static void wait_game_start() {
   if (game_state == GAME_WAITING) {
@@ -96,19 +49,12 @@ static void wait_game_start() {
     init_log();
     set_pos_log(3, 5);
     log("PRESS START");
-    pause_patch(&joypad_0_is_start);
+    pause(&joypad_0_is_start);
     game_state = GAME_PLAYING;
     init_log();
   }
 }
 
-void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
-  BYTE i = 0;
-  if (palCount) log_word("PALCOUNT", palette->palCount);
-  if (data) {
-    for(i = 0; i < (palette->palCount MULT16); i++) log_word("DATA", palette->data[i]);
-  }
-}
 
 void play_sound() {
   if (get_adpcm_player()->state == IDLE) {
@@ -203,7 +149,7 @@ static void update_logic() {
     if (ball_state.position.x <= SCREEN_X_MIN) log_info("COMPUTER WINS");
     log_info("");
     log_info("PRESS A TO CONTINUE");
-    pause();
+    pause(&joypad_0_is_a);
     main();
   }
 }
