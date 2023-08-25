@@ -1,43 +1,58 @@
 ![Platform](https://img.shields.io/badge/platform-%20%7C%20windows-lightgrey) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)  
 
-# neogeo-cd-pong  
+# Pong Game for Neo Geo CD using Neocore Kit  
   
 ![](https://media.giphy.com/media/mDknOSUEaP0zcI7tzV/giphy.gif)  
 ---------------------------------------------------- **_Visuals by Grass_**
   
-This code is a simple implementation of the classic game Pong for the Neo Geo CD,
-using a dev kit "Neocore" https://github.com/David-Vandensteen/neocore  
 
-See **src\main.c**  
+This repository contains a simple implementation of the classic game Pong for the Neo Geo CD platform, utilizing the Neocore Kit.  
 
-The code defines several constants for screen dimensions, speed of the paddles and ball, and a timeout for the AI's direction change.  
-A structure named "BallState" is defined to store the current state of the ball, including its position, slope, and direction.
+## Introduction  
 
-Two static boxes represent the upper and lower walls of the game.  
-There are two paddles (racquets).
+Pong is a two-player arcade game where players control paddles on opposite sides of the screen and use them to hit a ball back and forth.  
+The objective is to prevent the ball from passing your own paddle while trying to make the ball pass your opponent's paddle.  
+This implementation brings the iconic Pong game to the Neo Geo CD platform, offering a nostalgic gameplay experience.
 
-The ball is also represented by a "GFX_Picture_Physic" structure.  
-Another variable keeps track of the current direction of the AI (computer-controlled paddle) and a timeout counter for its direction change.
 
-The function "get_next_ball_position" calculates the next position of the ball based on its current slope and direction.  
-The "init_ball_state" function sets the initial state of the ball.  
+## How to Play  
 
-The "init" function initializes the game by setting up the GPU, initializing racquets and the ball, and positioning the walls.  
-The "display" function shows the game elements on the screen and initializes the ball's state.  
-The "update_logic" function checks if the ball has hit the left or right edge of the screen (the game boundary) and displays the winner when the game ends.  
-The "slope_ball" function determines the slope of the ball based on its position relative to a given racquet.  
-The "update_ball" function updates the ball's position, handles collisions with walls and racquets, and performs reflection for more realistic movement.  
+1) **Game Start:** When the game is launched, the title screen will be displayed. Press the "START" button on the controller to initiate the game.
 
-The "update_player" function updates the player-controlled racquet based on joystick input.  
-The "update_ia" function updates the AI-controlled racquet, which tracks the ball's position and moves accordingly.  
+2) **Player Controls:**
 
-The "update" function is responsible for updating the game state by calling "update_logic", "update_ball", "update_player", and "update_ia" functions.
+Player 1 (Left Paddle): Use the "UP" and "DOWN" buttons on the controller to move the paddle up and down, respectively.
+Player 2 (Right Paddle): The AI-controlled paddle automatically moves to intercept the ball.
+Gameplay: The ball will start moving across the screen, bouncing off the paddles and walls. The objective is to prevent the ball from passing your paddle while trying to make the ball pass your opponent's paddle.
 
-Finally, the main function initializes the game, displays the elements, and enters a loop to continuously update the game state while waiting for vertical blanking.
-The game loop updates the game state and refreshes the screen accordingly.
+3) **Win condition:** If the ball passes the opponent's paddle and reaches the edge of the screen, the human player wins  
 
-Overall, this code provides the foundation for a simple Pong game on a Neo Geo CD system using the "Neocore" library.  
+## Code Structure  
+
+The codebase is organized into several functions, each responsible for a specific aspect of the game.
+
+- wait_game_start(): Waits for the player to press the "START" button to begin the game.
+- get_next_ball_position(): Calculates the next position of the ball based on its current position, slope, direction, and speed.
+- init_ball_state(): Initializes the state of the ball with an initial slope, direction, and position.
+- init(): Initializes the game environment and elements, including paddles, ball, and walls.
+- display(): Displays the game elements on the screen, including the playfield, paddles, and ball.
+- update_logic(): Checks if the ball has hit the left or right edge of the screen and handles game over conditions.
+- slope_ball(): Determines the ball's slope based on its position relative to a paddle.
+- update_ball(): Updates the ball's position, manages collisions, and adjusts slope and direction.
+- update_player(): Allows the player to control their paddle using the controller's "UP" and "DOWN" buttons.
+- update_ia(): Controls the AI-controlled paddle's movement to intercept the ball.
+- update(): Main game update loop that orchestrates game logic, ball movement, player paddle, and AI paddle positions.
+- main(): Entry point of the game, initializes the game, displays the initial state, and enters the main game loop.
+
+Overall, this code provides the foundation or a bootstrap for a simple Pong game on a Neo Geo CD system using the "Neocore" library.  
+
 To make a fully functional and polished Pong game, you can consider adding more features such as scoring, multiple levels of difficulty, better collision handling, and graphical enhancements.
+
+## License  
+
+This Pong game is provided under the MIT License, allowing you to use, modify, and distribute the code freely.  
+
+Feel free to explore, enhance, and enjoy this implementation of the classic Pong game on the Neo Geo CD platform!
 
 ## Clone this repo
 ```cmd
