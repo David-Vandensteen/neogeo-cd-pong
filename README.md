@@ -3,7 +3,8 @@
 # Pong Game for Neo Geo CD using Neocore Kit  
   
 ![](https://media.giphy.com/media/mDknOSUEaP0zcI7tzV/giphy.gif)  
----------------------------------------------------- **_Visuals by Grass_**
+
+----------- **_Visuals by Grass_** -----------
   
 
 This repository contains a simple implementation of the classic game Pong for the Neo Geo CD platform, utilizing the Neocore Kit.  
