@@ -23,8 +23,9 @@ The objective is to prevent the ball from passing your own paddle while trying t
 
 2) **Player Controls:**
 
-Player 1 (Left Paddle): Use the "UP" and "DOWN" buttons on the controller to move the paddle up and down, respectively.
-Player 2 (Right Paddle): The AI-controlled paddle automatically moves to intercept the ball.
+Player 1 (Left Paddle): Use the "UP" and "DOWN" buttons on the controller to move the paddle up and down, respectively.  
+Player 2 (Right Paddle): The AI-controlled paddle automatically moves to intercept the ball.  
+
 Gameplay: The ball will start moving across the screen, bouncing off the paddles and walls. The objective is to prevent the ball from passing your paddle while trying to make the ball pass your opponent's paddle.
 
 3) **Win condition:** If the ball passes the opponent's paddle and reaches the edge of the screen, the human player wins  
