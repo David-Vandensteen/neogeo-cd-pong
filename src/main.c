@@ -42,31 +42,25 @@ static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 static enum Game_state { GAME_WAITING, GAME_PLAYING };
 static enum Game_state game_state = GAME_WAITING;
 
+
 static void wait_game_start() {
   if (game_state == GAME_WAITING) {
     wait_vbl();
     init_log();
     set_pos_log(3, 5);
-    log("PRESS A TO START");
-    pause();
+    log("PRESS START");
+    pause(&joypad_0_is_start);
     game_state = GAME_PLAYING;
     init_log();
   }
 }
 
-void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data) {
-  BYTE i = 0;
-  if (palCount) log_word("PALCOUNT", palette->palCount);
-  if (data) {
-    for(i = 0; i < (palette->palCount MULT16); i++) log_word("DATA", palette->data[i]);
-  }
-}
 
 void play_sound() {
   if (get_adpcm_player()->state == IDLE) {
     send_sound_command(ADPCM_STOP);
     send_sound_command(ADPCM_MIXKIT_GAME_CLICK_1114);
-    add_remaining_frame_adpcm_player(get_second_to_frame(1));
+    push_remaining_frame_adpcm_player(get_second_to_frame(1));
   }
 }
 
@@ -155,7 +149,7 @@ static void update_logic() {
     if (ball_state.position.x <= SCREEN_X_MIN) log_info("COMPUTER WINS");
     log_info("");
     log_info("PRESS A TO CONTINUE");
-    pause();
+    pause(&joypad_0_is_a);
     main();
   }
 }

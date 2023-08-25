@@ -9,6 +9,7 @@
 
 #ifndef NEOCORE_H
 #define NEOCORE_H
+
 #include <DATlib.h>
 #include <math.h>
 
@@ -224,6 +225,8 @@ void display_gas(GFX_Animated_Sprite *gfx_animated_sprite, short x, short y, WOR
  * @see use display_gfx_animated_sprite_physic() instead
  */
 void display_gasp(GFX_Animated_Sprite_Physic *gfx_animated_sprite_physic, short x, short y, WORD anim);
+
+void debug_paletteInfo(paletteInfo *palette, BOOL palCount, BOOL data);
 
   /*------------------*/
  /*  GFX VISIBILITY  */
@@ -565,15 +568,15 @@ void destroy_gasp(GFX_Animated_Sprite_Physic *gfx_animated_sprite_physic);
  //                                   GPU                                    //
 //--------------------------------------------------------------------------//
 
-void inline init_gpu();
-void inline clear_vram();
+void init_gpu();
+void clear_vram();
 char get_sin(WORD index);
 
   /*------------------------------*/
  /* GPU VBL                      */
 /*------------------------------*/
 
-DWORD inline wait_vbl_max(WORD nb);
+DWORD wait_vbl_max(WORD nb);
 #define wait_vbl() update_adpcm_player(); waitVBlank()
 
   /*------------------------------*/
@@ -602,7 +605,7 @@ int shrunk_centroid_get_translated_x(short centerPosX, WORD tileWidth, BYTE shru
 int shrunk_centroid_get_translated_y(short centerPosY, WORD tileHeight, BYTE shrunkY);
 void shrunk(WORD base_sprite, WORD max_width, WORD value);
 WORD shrunk_forge(BYTE xc, BYTE yc);
-void inline shrunk_addr(WORD addr, WORD shrunk_value);
+void shrunk_addr(WORD addr, WORD shrunk_value);
 WORD shrunk_range(WORD addr_start, WORD addr_end, WORD shrunk_value);
 
   //--------------------------------------------------------------------------//
@@ -709,13 +712,24 @@ BOOL joypad_is_b(BYTE id);
 BOOL joypad_is_c(BYTE id);
 BOOL joypad_is_d(BYTE id);
 
+BOOL joypad_0_is_a();
+BOOL joypad_0_is_b();
+BOOL joypad_0_is_c();
+BOOL joypad_0_is_d();
+BOOL joypad_0_is_left();
+BOOL joypad_0_is_right();
+BOOL joypad_0_is_up();
+BOOL joypad_0_is_down();
+BOOL joypad_0_is_select();
+BOOL joypad_0_is_start();
+
 void debug_joypad(BYTE id);
 
 /**
  * @deprecated since 1.0.5
  * @see debug_joypad(id) instead
  */
-void inline debug_joypad_p1();
+void debug_joypad_p1();
 
   //----------------------------------------------------------------------------//
  //                                  UTIL                                      //
@@ -723,15 +737,16 @@ void inline debug_joypad_p1();
 
 DWORD get_frame_to_second(DWORD frame);
 DWORD get_second_to_frame(DWORD second);
+void init_system();
 void init_all_system();
 Vec2short get_relative_position(Box box, Vec2short world_coord);
-void pause();
+void pause(BOOL (*exitFunc)());
 void sleep(DWORD frame);
 BOOL each_frame(DWORD frame);
 short get_positive(short num);
 short get_inverse(int num); // TODO TEST
 int get_random(int range);
-void inline fix_print_neocore(int x, int y, char *label);
+void fix_print_neocore(int x, int y, char *label);
 WORD free_ram_info();
 #define close_vbl() SCClose()
 #define get_frame_counter() DAT_frameCounter
@@ -750,19 +765,19 @@ void set_pos_log(WORD _x, WORD _y);
 
 void set_position_log(WORD _x, WORD _y);
 
-WORD inline log_info(char *txt);
+WORD log_info(char *txt);
 void log(char *message);
 
-void inline log_word(char *label, WORD value);
-void inline log_int(char *label, int value);
-void inline log_dword(char *label, DWORD value);
-void inline log_short(char *label, short value);
-void inline log_byte(char *label, BYTE value);
-void inline log_bool(char *label, BOOL value);
-void inline log_gas(char *label, GFX_Animated_Sprite *gfx_animated_sprite);
-void inline log_spriteInfo(char *label, spriteInfo *si);
-void inline log_box(char *label, Box *b);
-void inline log_pictureInfo(char *label, pictureInfo *pi);
+void log_word(char *label, WORD value);
+void log_int(char *label, int value);
+void log_dword(char *label, DWORD value);
+void log_short(char *label, short value);
+void log_byte(char *label, BYTE value);
+void log_bool(char *label, BOOL value);
+void log_gas(char *label, GFX_Animated_Sprite *gfx_animated_sprite);
+void log_spriteInfo(char *label, spriteInfo *si);
+void log_box(char *label, Box *b);
+void log_pictureInfo(char *label, pictureInfo *pi);
 
   /*---------------*/
  /* SOUND         */
@@ -770,7 +785,7 @@ void inline log_pictureInfo(char *label, pictureInfo *pi);
 
 void init_adpcm();
 void update_adpcm_player();
-void add_remaining_frame_adpcm_player(DWORD frame);
+void push_remaining_frame_adpcm_player(DWORD frame);
 Adpcm_player *get_adpcm_player();
 
   /*---------------*/

@@ -1,5 +1,8 @@
-Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-install-component.ps1"
-Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mp3towav.ps1"
+Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-install-component.ps1"
+Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-mp3towav.ps1"
+
+#Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-install-component.ps1"
+#Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-mp3towav.ps1"
 
 function Write-ISO {
   param (
@@ -84,12 +87,25 @@ function Write-CUE {
     Write-Host $ext
     Write-Host $path
 
+    if ($Rule -like "*raine") {
+      Write-Host $File
+      Write-Host $buildConfig.pathBuild
+      Copy-Item -Path $File -Destination "$($buildConfig.pathBuild)\$path"
+    }
+
     if ($ext -eq ".mp3" -and $Rule -like "*mame") {
       if ((Test-Path -Path "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64") -eq $false) {
         Install-Component -URL "$($buildConfig.baseURL)/mpg123-1.31.3-static-x86-64.zip" -PathDownload $buildConfig.pathSpool -PathInstall "$($buildConfig.pathNeocore)\bin"
       }
-      Write-WAV -mpg123 "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav" -MP3File "$($buildConfig.pathBuild)\$path\$baseName.mp3"
-      $File = "$($buildConfig.pathBuild)\$path\$baseName.wav"
+      # Write-WAV `
+      #   -mpg123 "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" `
+      #   -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav" `
+      #   -MP3File "$($buildConfig.pathBuild)\$path\$baseName.mp3"
+      Write-WAV `
+        -mpg123 "$($buildConfig.pathNeocore)\bin\mpg123-1.31.3-static-x86-64\mpg123.exe" `
+        -WAVFile "$($buildConfig.pathBuild)\$path\$baseName.wav" `
+        -MP3File "$path\$baseName.mp3"
+      $File = "$path\$baseName.wav"
     }
 
     return (
@@ -110,7 +126,6 @@ function Write-CUE {
     }
   }
   (Get-Content -Path $OutputFile -Raw).Replace("`r`n","`n") | Set-Content -Path $OutputFile -Force -NoNewline
-  #(Get-Content -Path $OutputFile -Raw) | Out-File -Encoding ascii -FilePath $OutputFile -Force
 
   if ((Test-Path -Path $OutputFile) -eq $true) {
     Logger-Success -Message "builded CUE is available to $OutputFile"
