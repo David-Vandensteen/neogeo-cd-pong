@@ -7,7 +7,9 @@
   
 
 This repository contains a simple implementation of the classic game Pong for the Neo Geo CD platform, utilizing the Neocore Kit.  
-It can be used as a starting point for a Pong-style game or for learning the Neocore library.
+It can be used as a starting point for a Pong-style game or for learning the Neocore library.  
+https://github.com/David-Vandensteen/neocore  
+
 
 ## Introduction  
 
