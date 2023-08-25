@@ -7,12 +7,12 @@
   
 
 This repository contains a simple implementation of the classic game Pong for the Neo Geo CD platform, utilizing the Neocore Kit.  
+It can be used as a starting point for a Pong-style game or for learning the Neocore library.
 
 ## Introduction  
 
 Pong is a two-player arcade game where players control paddles on opposite sides of the screen and use them to hit a ball back and forth.  
 The objective is to prevent the ball from passing your own paddle while trying to make the ball pass your opponent's paddle.  
-This implementation brings the iconic Pong game to the Neo Geo CD platform, offering a nostalgic gameplay experience.
 
 
 ## How to Play  
