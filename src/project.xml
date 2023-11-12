@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <name>pong</name>
-  <version>0.0.5-develop</version>
+  <version>1.0.0</version>
   <makefile>Makefile</makefile>
   <neocorePath>..\neocore</neocorePath>
   <buildPath>..\build</buildPath>
