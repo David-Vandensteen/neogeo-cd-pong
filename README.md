@@ -87,5 +87,8 @@ mak run:mame
 ## Release
 Build a iso & chd to distribute the game :  
 ```cmd
-mak dist
+mak dist:iso
+```
+```cmd
+mak dist:mame
 ```
