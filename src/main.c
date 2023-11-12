@@ -1,6 +1,6 @@
 /* -----------------------------------------------
 
-    Pong sample for Neo Geo CD over neocore kit
+    Pong sample for Neo Geo CD with neocore kit
 
     @2023
     David Vandensteen
@@ -55,7 +55,6 @@ static void wait_game_start() {
   }
 }
 
-
 void play_sound() {
   if (get_adpcm_player()->state == IDLE) {
     send_sound_command(ADPCM_STOP);
@@ -102,16 +101,8 @@ static void init() {
   play_cdda(2);
   init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
   init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  // --------------------------------------------------------neocore patch
-  racquet1.gfx_picture.pixel_height = racquet1.gfx_picture.pixel_height - 64;
-  // --------------width patch ?
-
   init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  // --------------------------------------------------------neocore patch
-  racquet2.gfx_picture.pixel_height = racquet2.gfx_picture.pixel_height - 64;
-  // --------------width patch ?
-
-  init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX); // TODO : neocore : AUTOBOX not working
+  init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX);
 
   init_box(&upper_wall, 320, 16, 0, 0);
   update_box(&upper_wall, 0, -16);
@@ -122,7 +113,8 @@ static void init() {
 
 /*------------------------
   Function to display the game
-    - Show the game elements on the screen by using the "display_gfx_picture_physic" function to display the racquets and ball at specific positions. It also initializes the ball's state using the "init_ball_state" function.
+    - Show the game elements on the screen by using the "display_gfx_picture_physic" function to display the racquets and ball at specific positions.
+    It also initializes the ball's state using the "init_ball_state" function.
 -------------------------*/
 
 static void display() {
@@ -236,7 +228,7 @@ static void update_player() {
   update_joypad(0);
   if (joypad_is_up(0) && get_y_gfx_picture_physic(racquet1) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
 
-  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet1) < SCREEN_Y_MAX - racquet1.gfx_picture.pixel_height) {
+  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet1) + 64 < SCREEN_Y_MAX) {
     move_gfx_picture_physic(&racquet1, 0, RACQUET_SPEED);
   }
 }
