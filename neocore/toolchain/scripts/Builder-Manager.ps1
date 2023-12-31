@@ -2,6 +2,7 @@
 # David Vandensteen
 # MIT
 
+
 param (
   [Parameter(Mandatory=$true)][String] $ConfigFile,
   [String] $Rule = "default"
@@ -57,6 +58,7 @@ function Check {
     }
     return $true
   }
+
   function Check-XMLError {
     param ([Parameter(Mandatory=$true)][String] $Entry)
     Write-Host "error : xml $Entry not found" -ForegroundColor Red
@@ -74,12 +76,23 @@ function Check {
     if (-Not($Config.project.neocorePath)) { Check-XMLError -Entry "project.neocorePath" }
     if (-Not($Config.project.buildPath)) { Check-XMLError -Entry "project.buildPath" }
     if (-Not($Config.project.distPath)) { Check-XMLError -Entry "project.distPath" }
-    #if (-Not($Config.project.XMLDATFile)) { Check-XMLError -Entry "project.XMLDATFile" }
+    if (-Not($Config.project.emulator)) { Check-XMLError -Entry "project.emulator" }
+    if (-Not($Config.project.compiler)) { Check-XMLError -Entry "project.compiler" }
+    if (-Not($Config.project.compiler.path)) { Check-XMLError -Entry "project.compiler.path" }
+    if (-Not($Config.project.compiler.includePath)) { Check-XMLError -Entry "project.compiler.includePath" }
+    if (-Not($Config.project.compiler.libraryPath)) { Check-XMLError -Entry "project.compiler.libraryPath" }
+    if (-Not($Config.project.compiler.systemFile)) { Check-XMLError -Entry "project.compiler.systemFile" }
+
+    if ($Config.project.sound) {
+      if ($Config.project.sound.cdda) {
+        if (-Not($Config.project.sound.cdda.dist.iso.format)) { Check-XMLError -Entry "project.sound.cdda.dist.iso.format" }
+        if (-Not($Config.project.sound.cdda.tracks)) { Check-XMLError -Entry "project.sound.cdda.tracks" }
+      }
+    }
   }
   function Check-Path {
     if ((Test-Path -Path $Config.project.makefile) -eq $false) { Check-PathError -Path $Config.project.makefile }
     if ((Test-Path -Path $Config.project.neocorePath) -eq $false) { Check-PathError -Path $Config.project.neocorePath }
-    #if ((Test-Path -Path $Config.project.XMLDATFile) -eq $false) { Check-PathError -Path $Config.project.XMLDATFile }
   }
   Write-Host "check config" -ForegroundColor Yellow
   Check-XML
@@ -188,9 +201,12 @@ function Main {
   Write-Host "--------------------------------------------"
   Write-Host ""
 
+  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\module-check-rule.ps1"
   Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\module-logger.ps1"
   Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\module-sdk.ps1"
   Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\module-emulators.ps1"
+
+  Check-Rule
 
   $raineProcessName = [System.IO.Path]::GetFileNameWithoutExtension($Config.project.emulator.raine.exeFile)
   $mameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($Config.project.emulator.mame.exeFile)
@@ -198,11 +214,6 @@ function Main {
   Stop-Emulators -RaineProcessName $raineProcessName -MameProcessName $mameProcessName
 
   if ((Test-Path -Path $buildConfig.pathSpool) -eq $false) { New-Item -Path $buildConfig.pathSpool -ItemType Directory -Force }
-
-  #if ($Config.project.compiler.version -eq "2.95.2") {
-    #$gccPath = "$($buildConfig.pathNeoDev)\m68k\bin"
-    #$gccPath = $Config.project.compiler.path
-  #}
 
   $gccPath = "..\..\build\gcc\gcc-2.95.2"
   Write-Host $gccPath
@@ -238,34 +249,17 @@ function Main {
   function BuilderSprite {
     Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-sprite.ps1"
     Write-DATXML -InputFile $ConfigFile -OutputFile "$($buildConfig.pathBuild)\chardata.xml"
-    #Write-Sprite -XMLFile $buildConfig.XMLDATFile -Format "cd" -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName)"
     Write-Sprite -XMLFile "$($buildConfig.pathBuild)\chardata.xml" -Format "cd" -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName)"
   }
 
   function BuilderISO {
     Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-iso.ps1"
 
-    #Write-Host "copy assets to $($buildConfig.pathBuild)\assets" -ForegroundColor Blue # TODO : remove hardcoded assets folder
-    #Robocopy /MIR assets "$($buildConfig.pathBuild)\assets" | Out-Null
-    # TODO : check lastexitcode
-
     Write-Cache `
       -PRGFile $buildConfig.PRGFile `
       -SpriteFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cd" `
       -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
       -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template" `
-
-    # if ($config.project.sound.sfx.pcm) {
-    #   Write-SFX `
-    #   -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-    #   -PCMFile "$($buildConfig.pathBuild)\$($config.project.sound.sfx.pcm)"
-    # }
-
-    # if ($config.project.sound.sfx.z80) {
-    #   Write-SFX `
-    #     -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-    #     -Z80File "$($buildConfig.pathBuild)\$($config.project.sound.sfx.z80)"
-    # }
 
     if ($config.project.sound.sfx.pcm) {
       Write-SFX `
@@ -300,12 +294,6 @@ function Main {
   function BuilderMame {
     $mamePath = Split-Path $Config.project.emulator.mame.exeFile
     $name = $Config.project.name
-
-    # Write-Mame `
-    #   -ProjectName $buildConfig.projectName `
-    #   -PathMame $mamePath `
-    #   -CUEFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
-    #   -OutputFile "$($buildConfig.pathMame)\roms\neocdz\$($buildConfig.projectName).chd"
     Write-Mame `
       -ProjectName $name `
       -PathMame $mamePath `
@@ -314,7 +302,6 @@ function Main {
   }
 
   function RunnerMame {
-    #$exeName = Split-Path $Config.project.emulator.mame.exeFile -Leaf -Resolve
     $exeName = [System.IO.Path]::GetFileName($Config.project.emulator.mame.exeFile)
     $mamePath = Split-Path $Config.project.emulator.mame.exeFile
 
@@ -326,7 +313,6 @@ function Main {
   }
 
   function RunnerRaine {
-    #$exeName = Split-Path $Config.project.emulator.raine.exeFile -Leaf -Resolve
     $exeName = [System.IO.Path]::GetFileName($Config.project.emulator.raine.exeFile)
 
     $rainePath = Split-Path $Config.project.emulator.raine.exeFile
@@ -398,21 +384,19 @@ function Main {
   if ($Rule -eq "dist:iso" -or $Rule -eq "dist:raine") {
     Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-dist.ps1"
 
-    #if ((Test-Path -Path $buildConfig.pathDist) -eq $false) { New-Item -Path $buildConfig.pathDist -ItemType Directory -Force }
     if ((Test-Path -Path $Config.project.distPath) -eq $false) { New-Item -Path $Config.project.distPath -ItemType Directory -Force }
     BuilderSprite
     BuilderProgram
     BuilderISO
     Write-Dist `
       -ProjectName $buildConfig.projectName `
-      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.version)" `
+      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.projectName)-$($buildConfig.version)" `
       -ISOFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).iso" `
       -CUEFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
   }
   if ($Rule -eq "dist:mame" -or $Rule -eq "dist:chd") {
     Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-mame.ps1"
     Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-dist.ps1"
-    #if ((Test-Path -Path $buildConfig.pathDist) -eq $false) { New-Item -Path $buildConfig.pathDist -ItemType Directory -Force }
     if ((Test-Path -Path $Config.project.distPath) -eq $false) { New-Item -Path $Config.project.distPath -ItemType Directory -Force }
     BuilderSprite
     BuilderProgram
@@ -420,7 +404,7 @@ function Main {
     BuilderMame
     Write-Dist `
       -ProjectName $buildConfig.projectName `
-      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.version)" `
+      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.projectName)-$($buildConfig.version)" `
       -CHDFile "$($buildConfig.pathMame)\roms\neocdz\$($buildConfig.projectName).chd" `
       -HashFile "$($buildConfig.pathMame)\hash\neocd.xml"
   }
