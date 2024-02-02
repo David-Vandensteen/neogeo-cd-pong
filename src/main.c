@@ -24,7 +24,7 @@
 typedef struct BallState {
   Vec2short position;
   short slope;
-  enum direction direction;
+  enum Direction direction;
 } BallState;
 
 static Box upper_wall;
@@ -36,34 +36,41 @@ static GFX_Picture_Physic racquet2;
 static GFX_Picture_Physic ball;
 static BallState ball_state;
 
-static enum direction ia_direction = NONE;
+static enum Direction ia_direction = NONE;
 static int ia_direction_timeout = IA_DIRECTION_MAX_TIMEOUT;
 
-static enum Game_state { GAME_WAITING, GAME_PLAYING };
-static enum Game_state game_state = GAME_WAITING;
+static enum Game_state { GAME_WAITING, GAME_PLAYING } game_state = GAME_WAITING;
 
+static BOOL joypad_0_is_start() {
+  if (nc_joypad_is_start(0)) return true;
+  return false;
+}
+
+static BOOL joypad_0_is_a() {
+  if (nc_joypad_is_a(0)) return true;
+  return false;
+}
 
 static void wait_game_start() {
   if (game_state == GAME_WAITING) {
-    wait_vbl();
-    init_log();
-    set_pos_log(3, 5);
-    log("PRESS START");
-    pause(&joypad_0_is_start);
+    nc_init_log();
+    nc_set_position_log(3, 5);
+    nc_log("PRESS START");
+    nc_pause(&joypad_0_is_start);
     game_state = GAME_PLAYING;
-    init_log();
-  }
-}
-
-void play_sound() {
-  if (get_adpcm_player()->state == IDLE) {
-    send_sound_command(ADPCM_STOP);
-    send_sound_command(ADPCM_MIXKIT_GAME_CLICK_1114);
-    push_remaining_frame_adpcm_player(get_second_to_frame(1));
+    nc_init_log();
   }
 }
 
 int main();
+
+void play_sound() {
+  if (nc_get_adpcm_player()->state == IDLE) {
+    send_sound_command(ADPCM_STOP);
+    send_sound_command(ADPCM_MIXKIT_GAME_CLICK_1114);
+    nc_push_remaining_frame_adpcm_player(nc_second_to_frame(1));
+  }
+}
 
 /*------------------------
   Function to get the next position of the ball based on its slope and direction.
@@ -73,7 +80,7 @@ int main();
     - It returns the updated position for the ball in the next step.
 -------------------------*/
 
-Vec2short get_next_ball_position(Vec2short current_position, short slope, enum direction direction, int speed) {
+Vec2short get_next_ball_position(Vec2short current_position, short slope, enum Direction direction, int speed) {
   Vec2short next_position = {current_position.x, current_position.y};
   if (slope != 0 && current_position.x % slope == 0) next_position.y = (slope > 0) ? next_position.y + speed : next_position.y - speed;
   next_position.x = (direction == RIGHT) ? next_position.x + speed : next_position.x - speed;
@@ -88,7 +95,8 @@ Vec2short get_next_ball_position(Vec2short current_position, short slope, enum d
 static void init_ball_state(BallState *ball_state) {
   ball_state->slope = -2;
   ball_state->direction = RIGHT;
-  ball_state->position = get_position_gfx_picture_physic(ball);
+  ball_state->position.x = nc_get_position_gfx_picture_physic(ball).x;
+  ball_state->position.y = nc_get_position_gfx_picture_physic(ball).y;
 }
 
 /*------------------------
@@ -97,18 +105,17 @@ static void init_ball_state(BallState *ball_state) {
 -------------------------*/
 
 static void init() {
-  init_all_system();
-  play_cdda(2);
-  init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
-  init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX);
+  nc_play_cdda(2);
+  nc_init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
+  nc_init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
+  nc_init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
+  nc_init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX);
 
-  init_box(&upper_wall, 320, 16, 0, 0);
-  update_box(&upper_wall, 0, -16);
+  nc_init_box(&upper_wall, 320, 16, 0, 0);
+  nc_update_box(&upper_wall, 0, -16);
 
-  init_box(&lower_wall, 320, 16, 0, 0);
-  update_box(&lower_wall, 0, 224);
+  nc_init_box(&lower_wall, 320, 16, 0, 0);
+  nc_update_box(&lower_wall, 0, 224);
 }
 
 /*------------------------
@@ -118,10 +125,10 @@ static void init() {
 -------------------------*/
 
 static void display() {
-  display_gfx_picture(&playfield, 0, 0);
-  display_gfx_picture_physic(&racquet1, 16, 16);
-  display_gfx_picture_physic(&racquet2, 320 - 32, 16);
-  display_gfx_picture_physic(&ball, 50, 100);
+  nc_display_gfx_picture(&playfield, 0, 0);
+  nc_display_gfx_picture_physic(&racquet1, 16, 16);
+  nc_display_gfx_picture_physic(&racquet2, 320 - 32, 16);
+  nc_display_gfx_picture_physic(&ball, 50, 100);
   init_ball_state(&ball_state);
 }
 
@@ -135,13 +142,13 @@ static void display() {
 
 static void update_logic() {
   if (ball_state.position.x >= SCREEN_X_MAX || ball_state.position.x <= SCREEN_X_MIN) {
-    init_log();
-    set_pos_log(10, 10);
-    if (ball_state.position.x >= SCREEN_X_MAX) log_info("PLAYER WINS");
-    if (ball_state.position.x <= SCREEN_X_MIN) log_info("COMPUTER WINS");
-    log_info("");
-    log_info("PRESS A TO CONTINUE");
-    pause(&joypad_0_is_a);
+    nc_init_log();
+    nc_set_position_log(10, 10);
+    if (ball_state.position.x >= SCREEN_X_MAX) nc_log_info("PLAYER WINS");
+    if (ball_state.position.x <= SCREEN_X_MIN) nc_log_info("COMPUTER WINS");
+    nc_log_info("");
+    nc_log_info("PRESS A TO CONTINUE");
+    nc_pause(&joypad_0_is_a);
     main();
   }
 }
@@ -153,11 +160,11 @@ static void update_logic() {
 -------------------------*/
 
 static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
-  Vec2short ball_local_coord = get_relative_position(racquet.box, ball_state->position);
+  Vec2short ball_local_coord = nc_get_relative_position(racquet.box, ball_state->position);
   if (ball_local_coord.y >= 0 && ball_local_coord.y < 22) {
     ball_state->slope = 2;
   } else if (ball_local_coord.y >= 22 && ball_local_coord.y < 44) {
-    switch (get_random(3)) {
+    switch (nc_random(3)) {
       case 0:
         ball_state->slope = -10;
         break;
@@ -184,12 +191,13 @@ static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
 -------------------------*/
 
 static void update_ball() {
-  BOOL collide_player = collide_box(&ball.box, &racquet1.box);
-  BOOL collide_ia = collide_box(&ball.box, &racquet2.box);
-  BOOL collide_upper_wall = collide_box(&upper_wall, &ball.box);
-  BOOL collide_lower_wall = collide_box(&lower_wall, &ball.box);
+  BOOL collide_player = nc_collide_box(&ball.box, &racquet1.box);
+  BOOL collide_ia = nc_collide_box(&ball.box, &racquet2.box);
+  BOOL collide_upper_wall = nc_collide_box(&upper_wall, &ball.box);
+  BOOL collide_lower_wall = nc_collide_box(&lower_wall, &ball.box);
+  Vec2short next_ball_position;
 
-  ball_state.position = get_position_gfx_picture_physic(ball);
+  ball_state.position = nc_get_position_gfx_picture_physic(ball);
 
   if (
       (collide_upper_wall && ball_state.slope < 0)
@@ -206,15 +214,8 @@ static void update_ball() {
     play_sound();
   }
 
-  set_position_gfx_picture_physic(
-    &ball,
-    get_next_ball_position(
-      ball_state.position,
-      ball_state.slope,
-      ball_state.direction,
-      BALL_SPEED
-    )
-  );
+  next_ball_position = get_next_ball_position(ball_state.position, ball_state.slope, ball_state.direction, BALL_SPEED);
+  nc_set_position_gfx_picture_physic(&ball, next_ball_position.x, next_ball_position.y);
 }
 
 /*------------------------
@@ -225,11 +226,10 @@ static void update_ball() {
 -------------------------*/
 
 static void update_player() {
-  update_joypad(0);
-  if (joypad_is_up(0) && get_y_gfx_picture_physic(racquet1) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
+  if (nc_joypad_is_up(0) && nc_get_position_gfx_picture_physic(racquet1).y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
 
-  if (joypad_is_down(0) && get_y_gfx_picture_physic(racquet1) + 64 < SCREEN_Y_MAX) {
-    move_gfx_picture_physic(&racquet1, 0, RACQUET_SPEED);
+  if (nc_joypad_is_down(0) && nc_get_position_gfx_picture_physic(racquet1).y + 64 < SCREEN_Y_MAX) {
+    nc_move_gfx_picture_physic(&racquet1, 0, RACQUET_SPEED);
   }
 }
 
@@ -242,18 +242,18 @@ static void update_player() {
 
 static void update_ia() {
   if (ia_direction_timeout <= 0) {
-    Vec2short ball_position = get_position_gfx_picture_physic(ball);
-    enum direction ball_direction = NONE;
-    if (ball_position.y < get_y_gfx_picture_physic(racquet2)) ball_direction = UP;
-    if (ball_position.y > get_y_gfx_picture_physic(racquet2)) ball_direction = DOWN;
+    Vec2short ball_position = nc_get_position_gfx_picture_physic(ball);
+    enum Direction ball_direction = NONE;
+    if (ball_position.y < nc_get_position_gfx_picture_physic(racquet2).y) ball_direction = UP;
+    if (ball_position.y > nc_get_position_gfx_picture_physic(racquet2).y) ball_direction = DOWN;
     ia_direction = ball_direction;
-    ia_direction_timeout = get_random(IA_DIRECTION_MAX_TIMEOUT);
+    ia_direction_timeout = nc_random(IA_DIRECTION_MAX_TIMEOUT);
   }
 
-  if (ia_direction == UP && get_y_gfx_picture_physic(racquet2) > SCREEN_Y_MIN) move_gfx_picture_physic(&racquet2, 0, -RACQUET_SPEED);
+  if (ia_direction == UP && nc_get_position_gfx_picture_physic(racquet2).y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet2, 0, -RACQUET_SPEED);
 
-  if (ia_direction == DOWN && get_y_gfx_picture_physic(racquet2) < SCREEN_Y_MAX - racquet2.gfx_picture.pixel_height) {
-    move_gfx_picture_physic(&racquet2, 0, RACQUET_SPEED);
+  if (ia_direction == DOWN && nc_get_position_gfx_picture_physic(racquet2).y < SCREEN_Y_MAX - racquet2.gfx_picture.pixel_height) {
+    nc_move_gfx_picture_physic(&racquet2, 0, RACQUET_SPEED);
   }
 
   ia_direction_timeout -= 1;
@@ -285,11 +285,9 @@ static void update() {
       - It first initializes the game environment and elements by calling the "init" function.
       - Then, it displays the initial game state by calling the "display" function.
       - The program enters a continuous loop (while loop) that represents the main game loop.
-      - Inside the game loop, it waits for the vertical blanking period using "wait_vbl()."
       - After waiting for the vertical blank, it updates the game state
         by calling the "update" function, which manages game logic and element movements.
 
-      - The loop then closes the vertical blanking period using "close_vbl()."
       - The loop continues indefinitely due to the "while(1)" condition,
         keeping the game running.
 
@@ -303,11 +301,9 @@ int main() {
   init();
   display();
   while(1) {
-    wait_vbl();
+    nc_update();
     update();
-    close_vbl();
     if (game_state != GAME_PLAYING) wait_game_start();
   };
-  close_vbl();
   return 0;
 }

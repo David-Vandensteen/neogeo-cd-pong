@@ -1,7 +1,5 @@
 Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\module-install-component.ps1"
 
-#Import-Module "$($buildConfig.pathToolchain)\scripts\modules\module-install-component.ps1"
-
 function Install-Neocore {
   $buildPath = $(Resolve-Path $buildConfig.pathNeocore)
  pushd "$($Config.project.neocorePath)\src-lib"
@@ -35,6 +33,9 @@ function Install-SDK {
   $downloadPath = $(Resolve-Path $buildConfig.pathSpool)
   $buildConfig
   Install-Component -URL "$($buildConfig.baseURL)/neocore-bin.zip" -PathDownload $downloadPath -PathInstall $installPath
+  Install-Component -URL "$($buildConfig.baseURL)/msys2-runtime.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
+  Install-Component -URL "$($buildConfig.baseURL)/find-command.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
+  Install-Component -URL "$($buildConfig.baseURL)/tr-command.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
   Install-Component -URL "$($buildConfig.baseURL)/DATimage.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
   Install-Component -URL "$($buildConfig.baseURL)/NGFX_SoundBuilder_210808.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
   Install-Component -URL "$($buildConfig.baseURL)/animator.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
