@@ -12,7 +12,7 @@
 #include <DATlib.h>
 #include <math.h>
 
-#define SHRUNK_TABLE_PROP_SIZE    0x2fe
+#define SHRUNK_TABLE_PROP_SIZE 0x2fe
 
 #define MANUALBOX 0
 #define AUTOBOX 1
@@ -303,6 +303,8 @@ WORD nc_shrunk_range(WORD addr_start, WORD addr_end, WORD shrunk_value);
 #define nc_bitwise_division_16(value) (value >> 4)
 #define nc_bitwise_division_32(value) (value >> 5)
 #define nc_bitwise_division_64(value) (value >> 6)
+#define nc_bitwise_division_128(value) (value >> 7)
+#define nc_bitwise_division_256(value) (value >> 8)
 
 #define nc_bitwise_multiplication_2(value) (value << 1)
 #define nc_bitwise_multiplication_4(value) (value << 2)
@@ -310,6 +312,8 @@ WORD nc_shrunk_range(WORD addr_start, WORD addr_end, WORD shrunk_value);
 #define nc_bitwise_multiplication_16(value) (value << 4)
 #define nc_bitwise_multiplication_32(value) (value << 5)
 #define nc_bitwise_multiplication_64(value) (value << 6)
+#define nc_bitwise_multiplication_128(value) (value << 7)
+#define nc_bitwise_multiplication_256(value) (value << 8)
 
 #define nc_random(range) rand() % range
 
@@ -326,7 +330,6 @@ WORD nc_shrunk_range(WORD addr_start, WORD addr_end, WORD shrunk_value);
 #define nc_fix_sub(num1, num2) fsub(num1, num2)
 #define nc_fix_mul(num1, num2) fmul(num1, num2)
 #define nc_cos(num) fcos(num)
-#define nc_sin(num) fsin(num)
 #define nc_tan(num) ftan(num)
 
   //--------------------------------------------------------------------------//
@@ -379,11 +382,12 @@ void nc_debug_joypad(BYTE id);
 DWORD nc_frame_to_second(DWORD frame);
 DWORD nc_second_to_frame(DWORD second);
 void nc_init_system();
+void nc_reset();
 Vec2short nc_get_relative_position(Box box, Vec2short world_coord);
 void nc_pause(BOOL (*exitFunc)());
 void nc_sleep(DWORD frame);
 BOOL nc_each_frame(DWORD frame);
-void nc_fix_print_neocore(int x, int y, char *label);
+void nc_print(int x, int y, char *label);
 WORD nc_free_ram_info();
 #define nc_get_frame_counter() DAT_frameCounter
 
