@@ -72,14 +72,14 @@ cd neogeo-cd-pong\src
 mak
 ```
 
-## Testing
+## Running with emulator
 
-**With Raine**
+**Raine**
 ```cmd
 mak run:raine
 ```
 
-**With Mame**
+**Mame**
 ```cmd
 mak run:mame
 ```
