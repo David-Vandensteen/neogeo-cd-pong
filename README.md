@@ -60,7 +60,7 @@ Feel free to explore, enhance, and enjoy this implementation of the classic Pong
 
 ## Clone this repo
 ```cmd
-git clone git@github.com:David-Vandensteen/neogeo-cd-pong.git
+git clone https://github.com/David-Vandensteen/neogeo-cd-pong.git
 ```
 
 ## Building
