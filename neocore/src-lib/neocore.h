@@ -261,6 +261,7 @@ void nc_clear_vram();
  /* GPU VBL                      */
 /*------------------------------*/
 
+#define nc_wait_vbl() waitVBlank();
 void nc_update();
 DWORD nc_wait_vbl_max(WORD nb);
 
@@ -332,6 +333,8 @@ WORD nc_shrunk_range(WORD addr_start, WORD addr_end, WORD shrunk_value);
 #define nc_cos(num) fcos(num)
 #define nc_tan(num) ftan(num)
 
+char nc_sin(WORD index);
+
   //--------------------------------------------------------------------------//
  //                                PHYSIC                                    //
 //--------------------------------------------------------------------------//
@@ -354,6 +357,7 @@ void nc_resize_box(Box *Box, short edge); // todo (minor) - deprecated ?
 //--------------------------------------------------------------------------//
 
 void nc_play_cdda(BYTE track);
+void nc_stop_adpcm();
 
   //----------------------------------------------------------------------------//
  //                                  JOYPAD                                    //
