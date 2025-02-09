@@ -105,7 +105,6 @@ static void init_ball_state(BallState *ball_state) {
 -------------------------*/
 
 static void init() {
-  nc_play_cdda(2);
   nc_init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
   nc_init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
   nc_init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
@@ -116,6 +115,8 @@ static void init() {
 
   nc_init_box(&lower_wall, 320, 16, 0, 0);
   nc_update_box(&lower_wall, 0, 224);
+
+  nc_play_cdda(2);
 }
 
 /*------------------------
@@ -149,6 +150,7 @@ static void update_logic() {
     nc_log_info("");
     nc_log_info("PRESS A TO CONTINUE");
     nc_pause(&joypad_0_is_a);
+    nc_init_log();
     main();
   }
 }
