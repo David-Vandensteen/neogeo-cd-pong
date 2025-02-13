@@ -102,34 +102,68 @@ static void init_ball_state(BallState *ball_state) {
 /*------------------------
   Function to initialize the game
     - Init the game environment and elements, including the racquets, ball, and boundary walls, to prepare for the start of the game.
+  Function to display the game
+    - Show the game elements on the screen, including the playfield, racquets, and ball.
+    It also initializes the ball's state using the "init_ball_state" function.
 -------------------------*/
 
 static void init() {
-  nc_play_cdda(2);
-  nc_init_gfx_picture(&playfield, &playfield_asset, &playfield_asset_Palettes);
-  nc_init_gfx_picture_physic(&racquet1, &racquet1_asset, &racquet1_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  nc_init_gfx_picture_physic(&racquet2, &racquet2_asset, &racquet2_asset_Palettes, 16, 64, 0, 0, AUTOBOX);
-  nc_init_gfx_picture_physic(&ball, &ball_asset, &ball_asset_Palettes, 16, 16, 0, 0, AUTOBOX);
+  nc_init_display_gfx_picture(
+    &playfield,
+    &playfield_asset,
+    &playfield_asset_Palettes,
+    0,
+    0
+  );
+
+  nc_init_display_gfx_picture_physic(
+    &racquet1,
+    &racquet1_asset,
+    &racquet1_asset_Palettes,
+    16,
+    16,
+    16,
+    64,
+    0,
+    0,
+    AUTOBOX
+  );
+
+  nc_init_display_gfx_picture_physic(
+    &racquet2,
+    &racquet2_asset,
+    &racquet2_asset_Palettes,
+    320 - 32,
+    16,
+    16,
+    64,
+    0,
+    0,
+    AUTOBOX
+  );
+
+  nc_init_display_gfx_picture_physic(
+    &ball,
+    &ball_asset,
+    &ball_asset_Palettes,
+    50,
+    100,
+    16,
+    16,
+    0,
+    0,
+    AUTOBOX
+  );
 
   nc_init_box(&upper_wall, 320, 16, 0, 0);
   nc_update_box(&upper_wall, 0, -16);
 
   nc_init_box(&lower_wall, 320, 16, 0, 0);
   nc_update_box(&lower_wall, 0, 224);
-}
 
-/*------------------------
-  Function to display the game
-    - Show the game elements on the screen by using the "display_gfx_picture_physic" function to display the racquets and ball at specific positions.
-    It also initializes the ball's state using the "init_ball_state" function.
--------------------------*/
-
-static void display() {
-  nc_display_gfx_picture(&playfield, 0, 0);
-  nc_display_gfx_picture_physic(&racquet1, 16, 16);
-  nc_display_gfx_picture_physic(&racquet2, 320 - 32, 16);
-  nc_display_gfx_picture_physic(&ball, 50, 100);
   init_ball_state(&ball_state);
+
+  nc_play_cdda(2);
 }
 
 /*------------------------
@@ -149,6 +183,7 @@ static void update_logic() {
     nc_log_info("");
     nc_log_info("PRESS A TO CONTINUE");
     nc_pause(&joypad_0_is_a);
+    nc_init_log();
     main();
   }
 }
@@ -299,7 +334,6 @@ static void update() {
 
 int main() {
   init();
-  display();
   while(1) {
     nc_update();
     update();

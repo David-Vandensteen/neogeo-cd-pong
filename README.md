@@ -38,8 +38,7 @@ The codebase is organized into several functions, each responsible for a specifi
 - wait_game_start(): Waits for the player to press the "START" button to begin the game.
 - get_next_ball_position(): Calculates the next position of the ball based on its current position, slope, direction, and speed.
 - init_ball_state(): Initializes the state of the ball with an initial slope, direction, and position.
-- init(): Initializes the game environment and elements, including paddles, ball, and walls.
-- display(): Displays the game elements on the screen, including the playfield, paddles, and ball.
+- init(): Initializes and display the game environment and elements, including paddles, ball, and walls.
 - update_logic(): Checks if the ball has hit the left or right edge of the screen and handles game over conditions.
 - slope_ball(): Determines the ball's slope based on its position relative to a paddle.
 - update_ball(): Updates the ball's position, manages collisions, and adjusts slope and direction.
