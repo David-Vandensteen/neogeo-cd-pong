@@ -1,6 +1,6 @@
 .DS_Store
  *.png_reject.png
-dist/
+/dist/
 /build/
 *.wav
 .vscode
@@ -9,7 +9,8 @@ char.bin
 maps.s
 output.map
 palettes.s
-externs.h
 as.exe.stackdump
 *.o
 *.prg
+**/out/fix.bin
+**/out/char.bin

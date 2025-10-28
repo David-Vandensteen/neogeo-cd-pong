@@ -22,7 +22,7 @@
 #define IA_DIRECTION_MAX_TIMEOUT 25
 
 typedef struct BallState {
-  Vec2short position;
+  Position position;
   short slope;
   enum Direction direction;
 } BallState;
@@ -31,9 +31,9 @@ static Box upper_wall;
 static Box lower_wall;
 
 static GFX_Picture playfield;
-static GFX_Picture_Physic racquet1;
-static GFX_Picture_Physic racquet2;
-static GFX_Picture_Physic ball;
+static GFX_Physic_Picture racquet1;
+static GFX_Physic_Picture racquet2;
+static GFX_Physic_Picture ball;
 static BallState ball_state;
 
 static enum Direction ia_direction = NONE;
@@ -55,7 +55,7 @@ static void wait_game_start() {
   if (game_state == GAME_WAITING) {
     nc_init_log();
     nc_set_position_log(3, 5);
-    nc_log("PRESS START");
+    nc_log_info_line("PRESS START");
     nc_pause(&joypad_0_is_start);
     game_state = GAME_PLAYING;
     nc_init_log();
@@ -80,8 +80,8 @@ void play_sound() {
     - It returns the updated position for the ball in the next step.
 -------------------------*/
 
-Vec2short get_next_ball_position(Vec2short current_position, short slope, enum Direction direction, int speed) {
-  Vec2short next_position = {current_position.x, current_position.y};
+Position get_next_ball_position(Position current_position, short slope, enum Direction direction, int speed) {
+  Position next_position = {current_position.x, current_position.y};
   if (slope != 0 && current_position.x % slope == 0) next_position.y = (slope > 0) ? next_position.y + speed : next_position.y - speed;
   next_position.x = (direction == RIGHT) ? next_position.x + speed : next_position.x - speed;
   return next_position;
@@ -93,10 +93,12 @@ Vec2short get_next_ball_position(Vec2short current_position, short slope, enum D
 -------------------------*/
 
 static void init_ball_state(BallState *ball_state) {
+  Position pos;
   ball_state->slope = -2;
   ball_state->direction = RIGHT;
-  ball_state->position.x = nc_get_position_gfx_picture_physic(ball).x;
-  ball_state->position.y = nc_get_position_gfx_picture_physic(ball).y;
+  nc_get_position_gfx_picture_physic(&ball, &pos);
+  ball_state->position.x = pos.x;
+  ball_state->position.y = pos.y;
 }
 
 /*------------------------
@@ -178,10 +180,10 @@ static void update_logic() {
   if (ball_state.position.x >= SCREEN_X_MAX || ball_state.position.x <= SCREEN_X_MIN) {
     nc_init_log();
     nc_set_position_log(10, 10);
-    if (ball_state.position.x >= SCREEN_X_MAX) nc_log_info("PLAYER WINS");
-    if (ball_state.position.x <= SCREEN_X_MIN) nc_log_info("COMPUTER WINS");
+    if (ball_state.position.x >= SCREEN_X_MAX) nc_log_info_line("PLAYER WINS");
+    if (ball_state.position.x <= SCREEN_X_MIN) nc_log_info_line("COMPUTER WINS");
     nc_log_info("");
-    nc_log_info("PRESS A TO CONTINUE");
+    nc_log_info_line("PRESS A TO CONTINUE");
     nc_pause(&joypad_0_is_a);
     nc_init_log();
     main();
@@ -194,8 +196,9 @@ static void update_logic() {
       It then adjusts the vertical movement of the ball using the calculated slope.
 -------------------------*/
 
-static void slope_ball(BallState *ball_state ,GFX_Picture_Physic racquet) {
-  Vec2short ball_local_coord = nc_get_relative_position(racquet.box, ball_state->position);
+static void slope_ball(BallState *ball_state ,GFX_Physic_Picture racquet) {
+  Position ball_local_coord;
+  nc_get_relative_position(&ball_local_coord, racquet.box, ball_state->position);
   if (ball_local_coord.y >= 0 && ball_local_coord.y < 22) {
     ball_state->slope = 2;
   } else if (ball_local_coord.y >= 22 && ball_local_coord.y < 44) {
@@ -230,9 +233,9 @@ static void update_ball() {
   BOOL collide_ia = nc_collide_box(&ball.box, &racquet2.box);
   BOOL collide_upper_wall = nc_collide_box(&upper_wall, &ball.box);
   BOOL collide_lower_wall = nc_collide_box(&lower_wall, &ball.box);
-  Vec2short next_ball_position;
+  Position next_ball_position;
 
-  ball_state.position = nc_get_position_gfx_picture_physic(ball);
+  nc_get_position_gfx_picture_physic(&ball, &ball_state.position);
 
   if (
       (collide_upper_wall && ball_state.slope < 0)
@@ -261,9 +264,11 @@ static void update_ball() {
 -------------------------*/
 
 static void update_player() {
-  if (nc_joypad_is_up(0) && nc_get_position_gfx_picture_physic(racquet1).y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
+  Position pos;
+  nc_get_position_gfx_picture_physic(&racquet1, &pos);
+  if (nc_joypad_is_up(0) && pos.y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet1, 0, -RACQUET_SPEED);
 
-  if (nc_joypad_is_down(0) && nc_get_position_gfx_picture_physic(racquet1).y + 64 < SCREEN_Y_MAX) {
+  if (nc_joypad_is_down(0) && pos.y + 64 < SCREEN_Y_MAX) {
     nc_move_gfx_picture_physic(&racquet1, 0, RACQUET_SPEED);
   }
 }
@@ -276,18 +281,25 @@ static void update_player() {
 -------------------------*/
 
 static void update_ia() {
+  Position ball_position;
+  Position racquet2_position;
+  Position racquet2_pos;
+  enum Direction ball_direction;
+
   if (ia_direction_timeout <= 0) {
-    Vec2short ball_position = nc_get_position_gfx_picture_physic(ball);
-    enum Direction ball_direction = NONE;
-    if (ball_position.y < nc_get_position_gfx_picture_physic(racquet2).y) ball_direction = UP;
-    if (ball_position.y > nc_get_position_gfx_picture_physic(racquet2).y) ball_direction = DOWN;
+    nc_get_position_gfx_picture_physic(&ball, &ball_position);
+    nc_get_position_gfx_picture_physic(&racquet2, &racquet2_position);
+    ball_direction = NONE;
+    if (ball_position.y < racquet2_position.y) ball_direction = UP;
+    if (ball_position.y > racquet2_position.y) ball_direction = DOWN;
     ia_direction = ball_direction;
     ia_direction_timeout = nc_random(IA_DIRECTION_MAX_TIMEOUT);
   }
 
-  if (ia_direction == UP && nc_get_position_gfx_picture_physic(racquet2).y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet2, 0, -RACQUET_SPEED);
+  nc_get_position_gfx_picture_physic(&racquet2, &racquet2_pos);
+  if (ia_direction == UP && racquet2_pos.y > SCREEN_Y_MIN) nc_move_gfx_picture_physic(&racquet2, 0, -RACQUET_SPEED);
 
-  if (ia_direction == DOWN && nc_get_position_gfx_picture_physic(racquet2).y < SCREEN_Y_MAX - racquet2.gfx_picture.pixel_height) {
+  if (ia_direction == DOWN && racquet2_pos.y < SCREEN_Y_MAX - racquet2.gfx_picture.pixel_height) {
     nc_move_gfx_picture_physic(&racquet2, 0, RACQUET_SPEED);
   }
 

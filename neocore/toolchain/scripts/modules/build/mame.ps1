@@ -1,11 +1,19 @@
-Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\mame.ps1"
-
 function Build-Mame {
+  $projectBuildPath = Get-TemplatePath -Path $Config.project.buildPath
   $mamePath = Split-Path $Config.project.emulator.mame.exeFile
+  $mamePath = Get-TemplatePath -Path $mamePath
   $name = $Config.project.name
+  $cueFile = "$projectBuildPath\$name\$name.cue"
+
+  Write-Host "Build mame" -ForegroundColor Cyan
+  if (-Not(Assert-BuildMame)) {
+    Write-Host "MAME build assertion failed" -ForegroundColor Red
+    return $false
+  }
+
   Write-Mame `
     -ProjectName $name `
     -PathMame $mamePath `
-    -CUEFile "$($buildConfig.pathBuild)\$name.cue" `
+    -CUEFile $cueFile `
     -OutputFile "$mamePath\roms\neocdz\$name.chd"
 }

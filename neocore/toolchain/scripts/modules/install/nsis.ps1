@@ -1,8 +1,15 @@
-Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\install\component.ps1"
-
 function Install-NSIS {
-  $installPath = $(Resolve-Path $buildConfig.pathNeocore)
-  $downloadPath = $(Resolve-Path $buildConfig.pathSpool)
+  $installPath = $(Resolve-TemplatePath -Path $Config.project.buildPath)
+  $downloadPath = $(Resolve-TemplatePath -Path "$($Config.project.buildPath)\spool")
 
-  Install-Component -URL "$($buildConfig.baseURL)/retro-game-winpacker/nsis-3.08.zip" -PathDownload $downloadPath -PathInstall "$installPath\tools"
+  if ($Manifest.manifest.dependencies.nsis.url) {
+    Install-Component `
+      -URL $Manifest.manifest.dependencies.nsis.url `
+      -PathDownload $downloadPath `
+      -PathInstall (Get-TemplatePath -Path $Manifest.manifest.dependencies.nsis.path)
+  } else {
+    Write-Host "Error: NSIS not found in manifest dependencies" -ForegroundColor Red
+    Write-Host "Please add nsis to manifest.xml dependencies section" -ForegroundColor Yellow
+    return $false
+  }
 }

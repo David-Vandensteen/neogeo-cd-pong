@@ -1,61 +1,131 @@
-Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\install\component.ps1"
-
-function Install-Neocore {
-  $buildPath = $(Resolve-Path $buildConfig.pathNeocore)
- pushd "$($Config.project.neocorePath)\src-lib"
- .\build-neocore.bat `
-  -gccPath $buildPath\gcc\gcc-2.95.2 `
-  -includePath $buildPath\include `
-  -libraryPath $buildPath\lib
- if ($LASTEXITCODE -ne 0) {
-  popd
-  Logger-Error -Message  "lib neocore was not builded"
-  exit $LASTEXITCODE
- }
- popd
-}
-
 function Install-GCC {
   Param(
     [Parameter(Mandatory=$true)][String] $URL,
     [Parameter(Mandatory=$true)][String] $Destination
   )
 
-  $downloadPath = $(Resolve-Path $buildConfig.pathSpool)
+  $projectBuildPath = Get-TemplatePath -Path $Config.project.buildPath
+  $downloadPath = $(Resolve-TemplatePath -Path "$projectBuildPath\spool")
   if (-not $(Test-Path -Path $Destination)) {
     New-Item -Path $Destination -ItemType Directory -Force
-    Install-Component -URL $URL -PathDownload $downloadPath -PathInstall $Destination
+    if (-not (Install-Component -URL $URL -PathDownload $downloadPath -PathInstall $Destination)) {
+      Write-Host "Failed to install component from $URL" -ForegroundColor Red
+      return $false
+    }
   }
 }
 
 function Install-SDK {
-  $installPath = $(Resolve-Path $buildConfig.pathNeocore)
-  $downloadPath = $(Resolve-Path $buildConfig.pathSpool)
+  $installPath = $(Resolve-TemplatePath -Path $Config.project.buildPath)
+  $downloadPath = $(Resolve-TemplatePath -Path "$($Config.project.buildPath)\spool")
   $buildConfig
-  Install-Component -URL "$($buildConfig.baseURL)/neocore-bin.zip" -PathDownload $downloadPath -PathInstall $installPath
-  Install-Component -URL "$($buildConfig.baseURL)/msys2-runtime.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/find-command.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/tr-command.zip" -PathDownload $downloadPath -PathInstall "$installPath\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/DATimage.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
-  Install-Component -URL "$($buildConfig.baseURL)/NGFX_SoundBuilder_210808.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
-  Install-Component -URL "$($buildConfig.baseURL)/animator.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
-  Install-Component -URL "$($buildConfig.baseURL)/framer.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\tools"
-  Install-Component -URL "$($buildConfig.baseURL)/NeoTools.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/buildchar.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/charSplit.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/chdman.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\bin"
-  Install-Component -URL "$($buildConfig.baseURL)/neodev-sdk.zip" -PathDownload $downloadPath -PathInstall $installPath
-  Install-Component -URL "$($buildConfig.baseURL)/neodev-lib.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\lib"
-  Install-Component -URL "$($buildConfig.baseURL)/libDATlib.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\lib"
-  Install-Component -URL "$($buildConfig.baseURL)/neodev-header.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\include"
-  Install-Component -URL "$($buildConfig.baseURL)/DATlib-header.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\include"
-  Install-Component -URL "$($buildConfig.baseURL)/system.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\system"
 
-  Install-GCC -URL "$($buildConfig.baseURL)/gcc-2.95.2.zip" -Destination "$($installPath)\gcc\gcc-2.95.2"
-  #Install-Component -URL "$($buildConfig.baseURL)/MinGW-m68k-elf-13.1.0.zip" -PathDownload $downloadPath -PathInstall "$($installPath)\gcc"
+  if (-not (Install-Component `
+      -URL $Manifest.manifest.dependencies.neocoreBin.url `
+      -PathDownload $downloadPath `
+      -PathInstall $Manifest.manifest.dependencies.neocoreBin.path)) {
+    Write-Host "Failed to install neocoreBin component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.msys2Runtime.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.msys2Runtime.path)) {
+    Write-Host "Failed to install msys2Runtime component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.findCommand.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.findCommand.path)) {
+    Write-Host "Failed to install findCommand component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.trCommand.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.trCommand.path)) {
+    Write-Host "Failed to install trCommand component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.datImage.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.datImage.path)) {
+    Write-Host "Failed to install datImage component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.ngfxSoundBuilder.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.ngfxSoundBuilder.path)) {
+    Write-Host "Failed to install ngfxSoundBuilder component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.datAnimatorFramer.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.datAnimatorFramer.path)) {
+    Write-Host "Failed to install datAnimatorFramer component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.datBuildCharCharSplit.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.datBuildCharCharSplit.path)) {
+    Write-Host "Failed to install datBuildCharCharSplit component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.chdman.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.chdman.path)) {
+    Write-Host "Failed to install chdman component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.neodevLib.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.neodevLib.path)) {
+    Write-Host "Failed to install neodevLib component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.datLib.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.datLib.path)) {
+    Write-Host "Failed to install datLib component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.systemFont.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.systemFont.path)) {
+    Write-Host "Failed to install systemFont component" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Install-Component `
+    -URL $Manifest.manifest.dependencies.gcc.url `
+    -PathDownload $downloadPath `
+    -PathInstall $Manifest.manifest.dependencies.gcc.path)) {
+    Write-Host "Failed to install gcc component" -ForegroundColor Red
+    return $false
+  }
 
-  Install-Neocore
-  $manifestFile = "$($Config.project.neocorePath)\manifest.xml"
-  Copy-Item -Path $manifestFile $installPath -Force -ErrorAction Stop
-  Copy-Item -Path "$($Config.project.neocorePath)\manifest.xml" $buildConfig.pathNeocore -Force -ErrorAction Stop
+  if (-not (Build-NeocoreLib)) {
+    Write-Host "Failed to build Neocore library" -ForegroundColor Red
+    return $false
+  }
+  $projectNeocorePath = Resolve-TemplatePath -Path $Config.project.neocorePath
+  $manifestFile = "$projectNeocorePath\manifest.xml"
+
+  Write-Host "Copying $manifestFile to $installPath" -ForegroundColor Cyan
+  try {
+    Copy-Item -Path $manifestFile $installPath -Force -ErrorAction Stop
+    Write-Host "SDK installation completed successfully" -ForegroundColor Green
+    return $true
+  } catch {
+    Write-Host "Failed to copy manifest file: $($_.Exception.Message)" -ForegroundColor Red
+    return $false
+  }
 }
