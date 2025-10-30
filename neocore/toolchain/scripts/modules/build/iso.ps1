@@ -1,38 +1,64 @@
-Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\iso.ps1"
-
 function Build-ISO {
-  Write-Cache `
-    -PRGFile $buildConfig.PRGFile `
-    -SpriteFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cd" `
-    -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-    -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template" `
+  $projectBuildPath = Resolve-TemplatePath -Path $Config.project.buildPath
+  $prgFile = "$projectBuildPath\$($Config.project.name)\$($Config.project.name).prg"
+  $spriteFile = "$projectBuildPath\$($Config.project.name)\$($Config.project.name).cd"
+  $pathISOBuildFolder = "$projectBuildPath\$($Config.project.name)\iso"
+  $pathCDTemplate = "$projectBuildPath\cd_template"
+  $outputISOFile = "$projectBuildPath\$($Config.project.name)\$($Config.project.name).iso"
+  $outputCUEFile = "$projectBuildPath\$($Config.project.name)\$($Config.project.name).cue"
 
-  if ($config.project.sound.sfx.pcm) {
-    Write-SFX `
-    -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-    -PCMFile "$($config.project.sound.sfx.pcm)"
+  Write-Host "Build ISO" -ForegroundColor Cyan
+  if (-Not(Assert-BuildISO)) {
+    Write-Host "ISO build assertion failed" -ForegroundColor Red
+    return $false
   }
 
-  if ($config.project.sound.sfx.z80) {
-    Write-SFX `
-      -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-      -Z80File "$($config.project.sound.sfx.z80)"
+  if (-not (Write-Cache `
+    -PRGFile $prgFile `
+    -SpriteFile $spriteFile `
+    -PathISOBuildFolder $pathISOBuildFolder `
+    -PathCDTemplate $pathCDTemplate)) {
+    return $false
   }
 
-  Write-ISO `
-    -PRGFile $buildConfig.PRGFile `
-    -SpriteFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cd" `
-    -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).iso" `
-    -PathISOBuildFolder "$($buildConfig.pathBuild)\iso" `
-    -PathCDTemplate "$($buildConfig.pathNeocore)\cd_template" `
+  if ($config.project.sound.cd.sfx.pcm) {
+    if (-not (Write-SFX `
+    -PathISOBuildFolder $pathISOBuildFolder `
+    -PCMFile "$($Config.project.sound.cd.sfx.pcm)")) {
+      return $false
+    }
+  }
 
-  $configCDDA = $null
+  if ($config.project.sound.cd.sfx.z80) {
+    if (-not (Write-SFX `
+      -PathISOBuildFolder $pathISOBuildFolder `
+      -Z80File "$($Config.project.sound.cd.sfx.z80)")) {
+      return $false
+    }
+  }
 
-  if ($Config.project.sound.cdda.tracks.track) { $configCDDA = $config.project.sound.cdda }
+  if (-not (Write-ISO `
+    -PRGFile $prgFile `
+    -SpriteFile $spriteFile `
+    -OutputFile $outputISOFile `
+    -PathISOBuildFolder $pathISOBuildFolder `
+    -PathCDTemplate $pathCDTemplate)) {
+    return $false
+  }
 
-  Write-CUE `
-    -Rule $buildConfig.rule `
-    -OutputFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
-    -ISOName "$($buildConfig.projectName).iso" `
-    -Config $configCDDA
+  # Always generate CUE file, with or without CDDA tracks
+  $cddaConfig = $null
+  if ($Config.project.sound.cd.cdda.tracks.track) {
+    $cddaConfig = $Config.project.sound.cd.cdda
+  }
+
+  if (-not (Write-CUE `
+    -Rule $Rule `
+    -OutputFile $outputCUEFile `
+    -ISOName "$($Config.project.name).iso" `
+    -ConfigCDDA $cddaConfig)) {
+    return $false
+  }
+
+  return $true
 }

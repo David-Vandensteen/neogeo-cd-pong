@@ -2,6 +2,8 @@
 # David Vandensteen
 # MIT
 
+# TODO : externalize folders creation
+
 param (
   [Parameter(Mandatory=$true)][String] $ConfigFile,
   [String] $Rule = "default"
@@ -10,206 +12,257 @@ param (
 function Main {
   param (
     [Parameter(Mandatory=$true)][String] $Rule,
-    [Parameter(Mandatory=$true)][String] $BaseURL,
     [Parameter(Mandatory=$true)][xml] $Config
   )
 
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\assert\config.ps1"
+  Write-Host "Builder Manager" -ForegroundColor Cyan
 
-  Assert-Config -Config $Config
+  # Set global variable for neocore path before importing modules
+  $global:neocorePathAbs = $Config.project.neocorePath
+  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\import\neocore\modules.ps1"
 
-  $buildConfig = [PSCustomObject]@{
-    pathMame = "$($Config.project.buildPath)\mame"
-    pathRaine = "$($Config.project.buildPath)\raine"
-    pathSpool = "$($Config.project.buildPath)\spool"
-    pathNeocore = $Config.project.buildPath
-    pathBuild = "$($Config.project.buildPath)\$($Config.project.name)"
-    pathDist = $Config.project.distPath
-    pathNeodevBin = "$($Config.project.buildPath)\neodev-sdk\m68k\bin"
-    pathNeocoreBin = "$($Config.project.buildPath)\bin"
-    pathNeodev = "$($Config.project.buildPath)\neodev-sdk"
-    projectName = $Config.project.name
-    version = $Config.project.version
-    makefile = $Config.project.makefile
-    PRGFile = "$($Config.project.buildPath)\$($Config.project.name)\$($Config.project.name).prg"
-    rule = $Rule
-    baseURL = $BaseURL
+  if (-Not(Assert-Project -Config $Config)) {
+    Write-Host "Project assertion failed" -ForegroundColor Red
+    return $false
   }
 
-  Write-Host "project name : $($buildConfig.projectName)"
-  Write-Host "project version : $($buildConfig.version)"
-  Write-Host "makefile : $($buildConfig.makefile)"
-  Write-Host "path neodev bin : $($buildConfig.pathNeodevBin)"
-  Write-Host "path neocore bin : $($buildConfig.pathNeocoreBin)"
-  Write-Host "path neodev : $($buildConfig.pathNeoDev)"
-  Write-Host "program file : $($buildConfig.PRGFile)"
-  Write-Host "required rule : $($buildConfig.rule)"
-  Write-Host "project setting file : $XMLProjectSettingFile"
-  Write-Host "graphic data XML file for DATLib : $($buildConfig.XMLDATFile)"
-  Write-Host "mame folder : $($buildConfig.pathMame)"
-  Write-Host "raine folder : $($buildConfig.pathRaine)"
-  Write-Host "spool folder for download : $($buildConfig.pathSpool)"
-  Write-Host "neocore folder : $($buildConfig.pathNeocore)"
-  Write-Host "path build : $($buildConfig.pathBuild)"
-  Write-Host "path dist : $($buildConfig.pathDist)"
+  Write-Host ""
+  Write-Host "Name : $($Config.project.name)"
+  Write-Host "Version : $($Config.project.version)"
+  Write-Host "Makefile : $($Config.project.makefile)"
+  Write-Host "Rule : $($Rule)"
   Write-Host "--------------------------------------------"
   Write-Host ""
 
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\assert\project-name.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\assert\rule.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\logger.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\install\sdk.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\stop\emulators.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\set\env-path.ps1"
-  Import-Module "$($config.project.neocorePath)\toolchain\scripts\modules\remove\project.ps1"
+  $manifestPath = $(Resolve-TemplatePath -Path "$($Config.project.neocorePath)\manifest.xml")
+  Write-Host "Getting manifest from $manifestPath" -ForegroundColor Cyan
+  $global:Manifest = [xml](Get-Content -Path $manifestPath)
 
-  Assert-Rule -Rule $($buildConfig.rule)
-  Assert-ProjectName -Name $($Config.project.name)
-  Stop-Emulators
+  if (-Not(Assert-Manifest)) {
+    Write-Host "Manifest assertion failed" -ForegroundColor Red
+    return $false
+  }
 
-  if ((Test-Path -Path $buildConfig.pathSpool) -eq $false) { New-Item -Path $buildConfig.pathSpool -ItemType Directory -Force }
+  if (-Not(Assert-Rule -Rule $Rule)) {
+    Write-Host "Invalid rule: $Rule" -ForegroundColor Red
+    return $false
+  }
+  if (-not (Stop-Emulators)) {
+    Write-Host "Warning: Failed to stop emulators" -ForegroundColor Yellow
+    # Continue anyway as this is not critical
+  }
+
+  if ($Rule -eq "clean") {
+    if (-not (MakClean)) {
+      Write-Host "Clean operation failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+
+  if ($Rule -eq "clean:build") {
+    if (-not (MakCleanBuild)) {
+      Write-Host "Clean build operation failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+
+  $spoolPath = Get-TemplatePath -Path "$($Config.project.buildPath)\spool"
+  if ((Test-Path -Path $spoolPath) -eq $false) {
+    New-Item -Path $spoolPath -ItemType Directory -Force
+  }
+
+  $makLogPath = Get-TemplatePath -Path "$($Config.project.buildPath)\mak.log"
+  Write-Host "Starting transcript log in $makLogPath" -ForegroundColor Cyan
+  Start-Transcript -Path $makLogPath -Force | Out-Null
 
   $gccPath = "..\..\build\gcc\gcc-2.95.2"
   Write-Host $gccPath
 
   if ($Config.project.compiler.path) { $gccPath = $Config.project.compiler.path }
 
-  Set-EnvPath -GCCPath $gccPath -Bin "$($Config.project.buildPath)\bin"
-  $env:NEODEV = $buildConfig.pathNeodev
+  if (-not (Set-EnvPath -GCCPath $gccPath -Bin "$($Config.project.buildPath)\bin")) {
+    Write-Host "Environment path setup failed" -ForegroundColor Red
+    return $false
+  }
+  $env:NEODEV = "$($Config.project.buildPath)\neodev-sdk"
 
-  if ((Test-Path -Path $buildConfig.pathNeoDevBin) -eq $false) { Install-SDK }
-  if ((Test-Path -Path $buildConfig.pathNeocoreBin) -eq $false) { Install-SDK }
-  if ((Test-Path -Path $buildConfig.pathNeodev) -eq $false) { Install-SDK }
+  $projectBuildPath = Get-TemplatePath -Path $Config.project.buildPath
+  $sdkComplete = $true
 
-  if ($Rule -notmatch "^only:") { Remove-Project }
-  if ((Test-Path -Path $buildConfig.pathBuild) -eq $false) { New-Item -Path $buildConfig.pathBuild -ItemType Directory -Force }
-  if ($Rule -eq "clean") { exit 0 }
+  # Check if SDK is complete by verifying key components
+  if (-not (Test-Path -Path "$projectBuildPath\bin")) {
+    $sdkComplete = $false
+  } elseif (-not (Test-Path -Path "$projectBuildPath\manifest.xml")) {
+    $sdkComplete = $false
+    Write-Host "Warning: SDK appears incomplete (missing manifest.xml)" -ForegroundColor Yellow
+  }
 
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\build\sprite.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\build\program.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\build\iso.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\build\mame.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\build\exe.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\install\nsis.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\show\version.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\start\mame.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\start\raine.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\start\animator.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\start\framer.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\watch\folder.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\iso.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\dist.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\program.ps1"
-  Import-Module "$($Config.project.neocorePath)\toolchain\scripts\modules\write\sprite.ps1"
+  if (-not $sdkComplete) {
+    Write-Host "Installing SDK..." -ForegroundColor Cyan
+    if (-not (Install-SDK)) {
+      Write-Host "SDK installation failed" -ForegroundColor Red
+      return $false
+    }
+  }
 
-  if ($Rule -eq "animator") { Start-Animator }
-  if ($Rule -eq "framer") { Start-Framer }
-  if ($Rule -eq "sprite") { Build-Sprite }
+  $projectBuildPath = Get-TemplatePath -Path $Config.project.buildPath
+  if ((Test-Path -Path "$projectBuildPath\$($Config.project.name)") -eq $false) {
+    New-Item -Path "$projectBuildPath\$($Config.project.name)" -ItemType Directory -Force
+  }
 
+  if ($Rule -eq "animator") {
+    if (-not (Start-Animator)) {
+      Write-Host "Animator start failed" -ForegroundColor Red
+      return $false
+    }
+  }
+  if ($Rule -eq "framer") {
+    if (-not (Start-Framer)) {
+      Write-Host "Framer start failed" -ForegroundColor Red
+      return $false
+    }
+  }
+  if ($Rule -eq "lib") {
+    if (-not (Build-NeocoreLib)) {
+      Write-Host "Neocore library build failed" -ForegroundColor Red
+      return $false
+    }
+  }
+  if ($Rule -eq "sprite") {
+    if (-not (Build-Sprite)) {
+      Write-Host "Sprite build failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
   if (($Rule -eq "make") -or ($Rule -eq "") -or (!$Rule) -or ($Rule -eq "default") ) {
-    Build-Sprite
-    Build-Program
+    if (-Not(MakDefault)) {
+      Write-Host "Default build failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
-  if ($Rule -eq "iso") {
-    Build-Sprite
-    Build-Program
-    Build-ISO
+  if ($Rule -eq "run:raine" -or $Rule -eq "raine" -or $Rule -like "run:raine:*") {
+    if (-Not(MakRunRaine)) {
+      Write-Host "Raine run failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
-  if ($Rule -eq "run:raine" -or $Rule -eq "raine") {
-    Build-Sprite
-    Build-Program
-    Build-ISO
-    Start-Raine
+  if ($Rule -like "run:mame*" -or $Rule -eq "mame" -or $Rule -eq "run") {
+    if (-Not(MakRunMame)) {
+      Write-Host "Mame run failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
-  if ($Rule -eq "run:mame" -or $Rule -eq "mame" -or $Rule -eq "run") {
-    Build-Sprite
-    Build-Program
-    Build-ISO
-    Build-Mame
-    Start-Mame
-  }
-
   if ($Rule -eq "serve:raine") {
-    While ($true) {
-      Build-Sprite
-      Build-Program
-      Build-ISO
-      Start-Raine
-      Watch-Folder -Path "."
-      Stop-Emulators
+    if (-Not(MakServeRaine)) {
+      Write-Host "Raine serve failed" -ForegroundColor Red
+      return $false
     }
+    return $true
   }
-
   if ($Rule -eq "serve:mame" -or $Rule -eq "serve") {
-    While ($true) {
-      Build-Sprite
-      Build-Program
-      Build-ISO
-      Build-Mame
-      Start-Mame
-      Watch-Folder -Path "."
-      Stop-Emulators
+    if (-Not(MakServeMame)) {
+      Write-Host "Mame serve failed" -ForegroundColor Red
+      return $false
     }
+    return $true
   }
-
   if ($Rule -eq "dist:iso" -or $Rule -eq "dist:raine") {
-    if ((Test-Path -Path $Config.project.distPath) -eq $false) { New-Item -Path $Config.project.distPath -ItemType Directory -Force }
-    Build-Sprite
-    Build-Program
-    Build-ISO
-    Write-Dist `
-      -ProjectName $buildConfig.projectName `
-      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.projectName)-$($buildConfig.version)" `
-      -ISOFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).iso" `
-      -CUEFile "$($buildConfig.pathBuild)\$($buildConfig.projectName).cue" `
+    if (-Not(MakDistISO)) {
+      Write-Host "ISO distribution failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
   if ($Rule -eq "dist:mame" -or $Rule -eq "dist:chd") {
-    if ((Test-Path -Path $Config.project.distPath) -eq $false) { New-Item -Path $Config.project.distPath -ItemType Directory -Force }
-    Build-Sprite
-    Build-Program
-    Build-ISO
-    Build-Mame
-    Write-Dist `
-      -ProjectName $buildConfig.projectName `
-      -PathDestination "$($Config.project.distPath)\$($buildConfig.projectName)\$($buildConfig.projectName)-$($buildConfig.version)" `
-      -CHDFile "$($buildConfig.pathMame)\roms\neocdz\$($buildConfig.projectName).chd" `
-      -HashFile "$($buildConfig.pathMame)\hash\neocd.xml"
+    if (-Not(MakDistMame)) {
+      Write-Host "Mame distribution failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
   if ($Rule -eq "dist:exe") {
-    if ((Test-Path -Path "$($config.project.buildPath)\tools\nsis-3.08") -eq $false) { Install-NSIS }
-    Build-Sprite
-    Build-Program
-    Build-ISO
-    Build-Mame
-    Build-EXE
+    if (-Not(MakDistExe)) {
+      Write-Host "Exe distribution failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
-
   if ($Rule -eq "--version") {
     Show-Version
+    return $true
+  }
+  if ($Rule -eq "only:sprite") {
+    if (-Not(Build-Sprite)) {
+      Write-Host "Sprite build failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+  if ($Rule -eq "only:program") {
+    if (-Not(Build-Program)) {
+      Write-Host "Program build failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+  if ($Rule -eq "only:mame") {
+    if (-Not(Build-Mame)) {
+      Write-Host "Mame build failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+  if ($Rule -eq "only:run") {
+    if (-Not(Start-Mame)) {
+      Write-Host "Mame start failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+  if ($Rule -eq "only:run:mame") {
+    if (-Not(Start-Mame)) {
+      Write-Host "Mame start failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
+  }
+  if ($Rule -eq "only:run:raine") {
+    if (-Not(Start-Raine)) {
+      Write-Host "Raine start failed" -ForegroundColor Red
+      return $false
+    }
+    return $true
   }
 
-  if ($Rule -eq "only:sprite") { Build-Sprite }
-  if ($Rule -eq "only:program") { Build-Program }
-  if ($Rule -eq "only:iso") { Build-ISO }
-  if ($Rule -eq "only:mame") { Build-Mame }
-  if ($Rule -eq "only:run") { Start-Mame }
-  if ($Rule -eq "only:run:mame") { Start-Mame }
-  if ($Rule -eq "only:run:raine") { Start-Mame }
+  # All operations completed successfully
+  return $true
 }
 
 if ((Test-Path -Path $ConfigFile) -eq $false) {
   Write-Host "Config $ConfigFile not found" -ForegroundColor Red
-  exit 1
+  return 1
 }
 
-Write-Host "informations" -ForegroundColor Blue
+Write-Host "informations" -ForegroundColor Cyan
 Write-Host "Config file : $ConfigFile"
 
-[xml]$config = (Get-Content -Path $ConfigFile)
+# FIX: Safe XML parsing with error handling
+try {
+  [xml]$config = (Get-Content -Path $ConfigFile)
+} catch {
+  Write-Host "Invalid XML configuration file: $ConfigFile" -ForegroundColor Red
+  Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+  return 1
+}
 
-Main -Config $config -BaseURL "http://azertyvortex.free.fr/download" -Rule $Rule
+$mainResult = Main -Config $config -Rule $Rule
+if (-not $mainResult) {
+  Write-Host "Build manager process failed" -ForegroundColor Red
+  exit 1
+}
