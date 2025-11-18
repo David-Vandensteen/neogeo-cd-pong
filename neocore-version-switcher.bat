@@ -104,14 +104,10 @@ if "!VERSION_FOUND!"=="branch" (
 
 echo Successfully switched to version: %ARG1%
 
-REM Remove existing neocore directory
+REM Clean up existing neocore folder
 if exist "%~dp0neocore" (
-  echo Removing existing neocore directory...
-  rmdir /s /q "%~dp0neocore"
-  if %errorlevel% neq 0 (
-    echo Error: Failed to remove neocore directory.
-    goto :end
-  )
+  echo Removing existing neocore folder...
+  rd /s /q "%~dp0neocore"
 )
 
 echo Running upgrade script...
