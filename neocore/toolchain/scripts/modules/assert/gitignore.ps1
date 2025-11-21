@@ -24,7 +24,10 @@ function Assert-Gitignore {
       "**/out/fix.bin",
       "**/out/char.bin",
       "/build/",
-      "/dist/"
+      "/dist/",
+      "upgrade.log",
+      "neocore-version-switcher-latest-spool.bat",
+      "neocore-version-switcher-spool/"      
     )
 
     # Check for missing required patterns
