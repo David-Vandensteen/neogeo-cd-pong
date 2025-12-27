@@ -397,6 +397,12 @@ void nc_gfx_init_scroller(
  /*  GFX DESTROY     */
 /*------------------*/
 
+void nc_gfx_destroy_scroller(GFX_Scroller *gfx_scroller) {
+  set_free_sprite_manager_index(gfx_scroller->scrollerDAT.baseSprite, 21);
+  nc_gpu_shrunk(gfx_scroller->scrollerDAT.baseSprite, 21, 0xFFF);
+  clearSprites(gfx_scroller->scrollerDAT.baseSprite, 21);
+}
+
 void nc_gfx_destroy_picture(GFX_Picture *gfx_picture) {
   pictureHide(&gfx_picture->pictureDAT);
   set_free_sprite_manager_index(
@@ -1421,7 +1427,7 @@ void nc_log_palette_info(paletteInfo *paletteInfo) {
   BYTE i = 0;
   for (i = 0; i < 16; i++) {
     sprintf(buffer, "0x%01X : 0x%04X", i, (unsigned int)paletteInfo[i].data);
-    nc_log_info(buffer);
+    nc_log_info_line(buffer);
   }
 }
 
@@ -1909,8 +1915,7 @@ void nc_shrunk_centroid_gfx_picture(
 
 // Legacy GFX Destroy functions
 void nc_destroy_gfx_scroller(GFX_Scroller *gfx_scroller) {
-  set_free_sprite_manager_index(gfx_scroller->scrollerDAT.baseSprite, 21);
-  clearSprites(gfx_scroller->scrollerDAT.baseSprite, 21);
+  nc_gfx_destroy_scroller(gfx_scroller);
 }
 
 void nc_destroy_gfx_picture_physic(GFX_Picture_Physic *gfx_picture_physic) {

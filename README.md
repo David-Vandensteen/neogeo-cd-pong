@@ -68,6 +68,10 @@ cd neogeo-cd-pong\src
 ```
 
 ```cmd
+mak sprite
+```
+
+```cmd
 mak
 ```
 
