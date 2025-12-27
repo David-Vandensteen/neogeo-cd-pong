@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <name>Neocore</name>
-  <version>3.3.2</version>
+  <version>3.4.1</version>
   <author>David Vandensteen</author>
   <projectLink>https://github.com/David-Vandensteen/neocore</projectLink>
   <dependencies>
@@ -50,9 +50,13 @@
       <path>{{build}}\bin</path>
     </ffmpeg>
     <mame>
-      <url>http://azertyvortex.free.fr/download/neocore/current/mame.zip</url>
+      <url>http://azertyvortex.free.fr/download/neocore/mame-0251-r0.zip</url>
       <path>{{build}}</path>
     </mame>
+    <mameNeodevPlugin>
+      <url>https://github.com/David-Vandensteen/neocore-mameNeoGeoDevPlugin/archive/refs/tags/1.0.0.zip</url>
+      <path>{{build}}\mame\plugins\ngdev</path>
+    </mameNeodevPlugin>
     <msys2Runtime>
       <url>http://azertyvortex.free.fr/download/neocore/current/msys2-runtime.zip</url>
       <path>{{build}}\bin</path>
@@ -74,9 +78,13 @@
       <path>{{build}}\tools</path>
     </nsis>
     <raine>
-      <url>http://azertyvortex.free.fr/download/neocore/current/raine.zip</url>
-      <path>{{build}}</path>
+      <url>http://azertyvortex.free.fr/download/neocore/raine64-0.97.5-r0.zip</url>
+      <path>{{build}}\spool</path>
     </raine>
+    <biosForRaine>
+      <url>http://azertyvortex.free.fr/download/neocore/bios-for-raine-r0.zip</url>
+      <path>{{build}}\raine\roms</path>
+    </biosForRaine>
     <trCommand>
       <url>http://azertyvortex.free.fr/download/neocore/current/tr-command.zip</url>
       <path>{{build}}\bin</path>
