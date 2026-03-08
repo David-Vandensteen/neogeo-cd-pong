@@ -193,7 +193,8 @@ function Assert-ProgramLegacy {
   $legacyTypes = @{
     'GFX_Animated_Sprite_Physic' = 'GFX_Animated_Physic_Sprite'
     'GFX_Picture_Physic' = 'GFX_Physic_Picture'
-    'Adpcm_player' = 'Sound_Adpcm_Player'
+    'Adpcm_player' = 'Sound_ADPCM_Player'
+    'Sound_Adpcm_Player' = 'Sound_ADPCM_Player'
   }
 
   $warningCount = 0
@@ -228,10 +229,10 @@ function Assert-ProgramLegacy {
         # Search for function calls (name followed by parentheses)
         $pattern = "\b$([regex]::Escape($legacyFunction))\s*\("
 
-        if ($content -match $pattern) {
+        if ($content -cmatch $pattern) {
           # Find exact lines
           for ($i = 0; $i -lt $lines.Count; $i++) {
-            if ($lines[$i] -match $pattern) {
+            if ($lines[$i] -cmatch $pattern) {
               $lineNumber = $i + 1
               $warningCount++
 
@@ -261,15 +262,15 @@ function Assert-ProgramLegacy {
         # Pattern matches: type varName, type*, type *, (type), (type*)
         $pattern = "\b$([regex]::Escape($legacyType))\b"
 
-        if ($content -match $pattern) {
+        if ($content -cmatch $pattern) {
           # Find exact lines
           for ($i = 0; $i -lt $lines.Count; $i++) {
             # Skip typedef lines (the actual legacy typedef declarations)
-            if ($lines[$i] -match "typedef.*$([regex]::Escape($legacyType))") {
+            if ($lines[$i] -cmatch "typedef.*$([regex]::Escape($legacyType))") {
               continue
             }
 
-            if ($lines[$i] -match $pattern) {
+            if ($lines[$i] -cmatch $pattern) {
               $lineNumber = $i + 1
               $warningCount++
 

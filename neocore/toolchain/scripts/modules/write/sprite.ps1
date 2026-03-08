@@ -12,12 +12,14 @@ function Watch-Error {
     Write-Host "ERROR: Invalid dimension detected in sprite" -ForegroundColor Red
     Write-Host "Build log contents:" -ForegroundColor Yellow
     $logContent | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+
     return $false
   }
   if (Select-String -Path "$buildPathProject\sprite.log" -Pattern "est pas valide") {
     Write-Host "ERROR: Invalid parameter detected" -ForegroundColor Red
     Write-Host "Build log contents:" -ForegroundColor Yellow
     $logContent | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+
     return $false
   }
 
@@ -25,6 +27,7 @@ function Watch-Error {
     Write-Host "ERROR: Sprite files rejected" -ForegroundColor Red
     Write-Host "Fix asset and remove *_reject file(s) in your project before launch a new build ..." -ForegroundColor Red
     Write-Host "Sprite reject..." -ForegroundColor Red
+    
     return $false
   }
 
@@ -76,7 +79,6 @@ function Write-Sprite {
   # TODO : timeout managment
 
   Write-Host "Running BuildChar.exe $XMLFile" -ForegroundColor Cyan
-
   Write-Host "Starting BuildChar.exe..." -ForegroundColor Green
 
   # Ensure log directory exists
@@ -251,13 +253,19 @@ function Write-Sprite {
     } else {
       Write-Host "ERROR: BuildChar.exe failed with exit code: $exitCode" -ForegroundColor Red
     }
+
     return $false
   }
 
   # Extract the charfile path from the XML to check the correct location
-  $xmlContent = [xml](Get-Content -Path $XMLFile)
-  $charfilePath = $xmlContent.chardata.setup.charfile
+  $charfilePath = $Config.project.gfx.DAT.chardata.setup.charfile
   Write-Host "Expected char file path from XML: $charfilePath" -ForegroundColor Cyan
+
+  # Generate GFX_DAT_Pict, GFX_DAT_Scrl, and GFX_DAT_Sprt structures
+  Write-OutGfxDAT
+
+  # Write externs.h includes the generated header
+  Write-Externs
 
   # Check if char.bin was created at the specified location
   Write-Host "Checking for char file at: $charfilePath" -ForegroundColor Cyan

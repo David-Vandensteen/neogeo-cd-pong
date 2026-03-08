@@ -1,3 +1,4 @@
+Import-Module "$neocorePathAbs\toolchain\scripts\modules\assert\emulator\mame.ps1"
 # ============================================================================
 # NEOCORE MODULE IMPORTS
 # Organized by functional categories
@@ -68,14 +69,17 @@ Import-Module "$neocorePathAbs\toolchain\scripts\modules\build\sprite.ps1"
 # ============================================================================
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\chardata.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\dist.ps1"
+Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\externs.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\fixdata.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\iso.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\mame.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\mp3.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\nsi.ps1"
+Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\platform.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\program.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\sprite.ps1"
 Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\wav.ps1"
+Import-Module "$neocorePathAbs\toolchain\scripts\modules\write\out\gfxDAT.ps1"
 
 # ============================================================================
 # INSTALL MODULES
